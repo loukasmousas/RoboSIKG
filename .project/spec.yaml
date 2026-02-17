@@ -97,7 +97,9 @@ execution:
         gpu:
             requested: 1
         sharedMemoryMB: 1024
-    secrets: []
+    secrets:
+        - variable: NIM_API_KEY
+          description: NIM_API_KEY
     mounts:
         - type: project
           target: /project/
