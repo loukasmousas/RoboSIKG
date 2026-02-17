@@ -98,8 +98,8 @@ execution:
             requested: 1
         sharedMemoryMB: 1024
     secrets:
-        - variable: NIM_API_KEY
-          description: NIM_API_KEY
+        - variable: NVIDIA_API_KEY
+          description: NIM
     mounts:
         - type: project
           target: /project/
