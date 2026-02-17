@@ -8,6 +8,10 @@ set -euo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
+if [ "$(id -u)" -ne 0 ]; then
+  exec sudo -E bash "$0"
+fi
+
 apt-get update
 apt-get install -y --no-install-recommends \
   ffmpeg \
