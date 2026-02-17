@@ -2,7 +2,7 @@
 # https://docs.docker.com/reference/compose-file/
 services:
   cosmos-reason2-8b:
-    image: nvcr.io/nim/meta/llama-3.1-8b-instruct:latest
+    image: nvcr.io/nim/nvidia/cosmos-reason2-8b:1.6.0
     runtime: nvidia
     deploy:
       resources:
@@ -11,6 +11,7 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+    shm_size: "32gb"
     ports:
       - "8000:8000"
     volumes:
@@ -18,11 +19,9 @@ services:
         source: ./nim_cache
         target: /opt/nim/.cache/
     environment:
-      - NGC_API_KEY=${NVIDIA_API_KEY:?Error NVIDIA_API_KEY not set}
+      - NGC_API_KEY=${NGC_API_KEY:?Error NGC_API_KEY not set}
     networks:
       - app-network
-    profiles:
-      - cosmos-reason2-8b
 
 networks:
   app-network:
