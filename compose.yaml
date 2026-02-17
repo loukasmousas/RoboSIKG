@@ -9,28 +9,20 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
+              device_ids: ["0"]
               capabilities: [gpu]
-
     ports:
       - "8000:8000"
-
     volumes:
-      - nim_cache:/opt/nim/.cache
-
-    # Workbench Environment Variables:
-    # You store NVIDIA_API_KEY in the UI (sensitive),
-    # but the NIM container expects NGC_API_KEY.
+      - type: bind
+        source: /tmp
+        target: /opt/nim/.cache/
     environment:
-      - NGC_API_KEY=${NVIDIA_API_KEY:?Set NVIDIA_API_KEY in AI Workbench Environment Variables}
-
-    shm_size: "16gb"
-
+      - NGC_API_KEY=${NVIDIA_API_KEY:?Error NVIDIA_API_KEY not set}
+    networks:
+      - app-network
     profiles:
-      - cosmos-reason2-8b
-
-volumes:
-  nim_cache: {}
+      - nvidia/cosmos-reason2-8b
 
 networks:
   app-network:
