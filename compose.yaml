@@ -1,0 +1,29 @@
+# Create your compose file. To learn more, please visit
+# https://docs.docker.com/reference/compose-file/
+services:
+  cosmos-reason2-8b:
+    image: nvcr.io/nim/nvidia/cosmos-reason2-8b:1.6.0
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "8000:8000"
+    volumes:
+      - type: bind
+        source: ./nim_cache
+        target: /opt/nim/.cache/
+    environment:
+      - NGC_API_KEY=${NVIDIA_API_KEY:?Error NVIDIA_API_KEY not set}
+    networks:
+      - app-network
+    profiles:
+      - cosmos-reason2-8b
+
+networks:
+  app-network:
+    driver: bridge
