@@ -9,20 +9,33 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ["0"]
+              count: 1
               capabilities: [gpu]
+
     ports:
       - "8000:8000"
+
+    # IMPORTANT:
+    # Workbench "Variables" can provide NVIDIA_API_KEY; we map it into the container as NGC_API_KEY
+    environment:
+      NGC_API_KEY: ${NVIDIA_API_KEY}
+
+      # These settings attempt to reduce KV-cache pressure for vLLM-style backends.
+      # They may or may not help depending on which profiles exist in the NIM manifest.
+      NIM_MAX_MODEL_LEN: "8192"
+      NIM_MAX_NUM_SEQS: "1"
+      NIM_KVCACHE_PERCENT: "0.50"
+
     volumes:
       - type: bind
-        source: /tmp
+        source: ./nim_cache
         target: /opt/nim/.cache/
-    environment:
-      - NGC_API_KEY=${NVIDIA_API_KEY:?Error NVIDIA_API_KEY not set}
+
     networks:
       - app-network
+
     profiles:
-      - nvidia/cosmos-reason2-8b
+      - cosmos-reason2-8b
 
 networks:
   app-network:
