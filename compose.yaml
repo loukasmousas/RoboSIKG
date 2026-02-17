@@ -2,7 +2,7 @@
 # https://docs.docker.com/reference/compose-file/
 services:
   cosmos-reason2-8b:
-    image: nvcr.io/nim/nvidia/cosmos-reason2-8b:1.6.0
+    image: nvcr.io/nim/meta/llama-3.1-8b-instruct:latest
     runtime: nvidia
     deploy:
       resources:
