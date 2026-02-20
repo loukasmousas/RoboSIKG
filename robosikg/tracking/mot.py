@@ -3,7 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
-from scipy.optimize import linear_sum_assignment
+
+try:
+    from scipy.optimize import linear_sum_assignment as _linear_sum_assignment
+except ImportError:  # pragma: no cover - exercised via monkeypatch in tests.
+    _linear_sum_assignment = None
 
 from robosikg.perception.base import Detection
 from .kalman import KalmanBox
@@ -21,6 +25,45 @@ def iou(a: tuple[int, int, int, int], b: tuple[int, int, int, int]) -> float:
     area_a = max(1, ax2 - ax1) * max(1, ay2 - ay1)
     area_b = max(1, bx2 - bx1) * max(1, by2 - by1)
     return float(inter / (area_a + area_b - inter))
+
+
+def _assign_pairs(cost: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Return 1:1 row/col assignments.
+
+    Uses SciPy's Hungarian solver when available. Falls back to deterministic
+    greedy matching when SciPy is unavailable.
+    """
+    if cost.size == 0:
+        return np.array([], dtype=np.int64), np.array([], dtype=np.int64)
+
+    if _linear_sum_assignment is not None:
+        return _linear_sum_assignment(cost)
+
+    n_rows, n_cols = cost.shape
+    pairs: list[tuple[float, int, int]] = []
+    for i in range(n_rows):
+        for j in range(n_cols):
+            pairs.append((float(cost[i, j]), i, j))
+
+    pairs.sort(key=lambda x: (x[0], x[1], x[2]))
+    row_used: set[int] = set()
+    col_used: set[int] = set()
+    rows: list[int] = []
+    cols: list[int] = []
+    max_matches = min(n_rows, n_cols)
+
+    for _c, i, j in pairs:
+        if i in row_used or j in col_used:
+            continue
+        rows.append(i)
+        cols.append(j)
+        row_used.add(i)
+        col_used.add(j)
+        if len(rows) >= max_matches:
+            break
+
+    return np.array(rows, dtype=np.int64), np.array(cols, dtype=np.int64)
 
 
 @dataclass
@@ -74,7 +117,7 @@ class MultiObjectTracker:
                     continue
                 cost[i, j] = 1.0 - iou(tr.bbox(), det.bbox_xyxy)
 
-        row_ind, col_ind = linear_sum_assignment(cost)
+        row_ind, col_ind = _assign_pairs(cost)
         matched_tracks = set()
         matched_dets = set()
 

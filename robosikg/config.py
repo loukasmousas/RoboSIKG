@@ -47,8 +47,8 @@ class VectorConfig:
 class ReasoningConfig:
     mode: Literal["auto", "nim", "mock"] = "auto"
     reason_every_n_frames: int = 50
-    nim_base_url: str = "http://127.0.0.1:8000/v1"
-    model_name: str = "nvidia/cosmos-reason2-2b"
+    nim_base_url: str = "http://160.211.46.134:8000/v1"
+    model_name: str = "nvidia/cosmos-reason2-8b"
     timeout_s: float = 60.0
 
 

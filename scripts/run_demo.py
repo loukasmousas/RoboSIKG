@@ -14,6 +14,9 @@ if TYPE_CHECKING:
     from robosikg.agent.orchestrator import Orchestrator
     from robosikg.config import DemoConfig
 
+DEFAULT_NIM_BASE_URL = os.getenv("ROBOSIKG_NIM_BASE_URL", "http://160.211.46.134:8000/v1")
+DEFAULT_MODEL_NAME = os.getenv("ROBOSIKG_MODEL_NAME", "nvidia/cosmos-reason2-8b")
+
 
 def build_config(args: argparse.Namespace):
     from robosikg.config import DemoConfig
@@ -51,8 +54,8 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--max-frames", type=int, default=500)
     ap.add_argument("--sample-fps", type=float, default=5.0)
     ap.add_argument("--reason-every-n-frames", type=int, default=50)
-    ap.add_argument("--nim-base-url", default="http://127.0.0.1:8000/v1")
-    ap.add_argument("--model-name", default="nvidia/cosmos-reason2-2b")
+    ap.add_argument("--nim-base-url", default=DEFAULT_NIM_BASE_URL)
+    ap.add_argument("--model-name", default=DEFAULT_MODEL_NAME)
     return ap.parse_args()
 
 

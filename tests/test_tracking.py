@@ -24,3 +24,20 @@ def test_tracker_class_mismatch_and_expiration():
     removed, _confirmed = tracker.step([])
     removed_ids = {t.track_id for t in removed}
     assert 0 in removed_ids
+
+
+def test_tracker_runs_without_scipy(monkeypatch):
+    import robosikg.tracking.mot as mot
+
+    monkeypatch.setattr(mot, "_linear_sum_assignment", None)
+
+    tracker = MultiObjectTracker(iou_match_thresh=0.1, max_age_frames=3, min_hits=1)
+    det0 = Detection(cls="person", score=0.9, bbox_xyxy=(0, 0, 20, 20))
+    _removed, confirmed = tracker.step([det0])
+    assert len(confirmed) == 1
+    assert confirmed[0].track_id == 0
+
+    det1 = Detection(cls="person", score=0.95, bbox_xyxy=(1, 1, 21, 21))
+    _removed, confirmed = tracker.step([det1])
+    assert len(confirmed) == 1
+    assert confirmed[0].track_id == 0

@@ -65,7 +65,7 @@ class TrajectoryPoint(BaseModel):
 
 
 class ReasoningOutput(BaseModel):
-    summary: str
+    summary: str = Field(min_length=1)
     claims: list[ReasoningClaim] = Field(default_factory=list)
     suggested_queries: list[str] = Field(default_factory=list)
     trajectory_2d_norm_0_1000: Optional[list[TrajectoryPoint]] = None
