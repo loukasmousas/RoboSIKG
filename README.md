@@ -5,6 +5,7 @@ RoboSIKG is a reproducible robotics memory pipeline for video-based physical AI:
 - RDF/SPARQL-style spatiotemporal knowledge graph (RDFLib)
 - vector memory (FAISS) with routing-embedding diagnostics metadata
 - Cosmos Reason 2 integration via NVIDIA NIM (OpenAI-compatible endpoint)
+- WebSocket-driven Ops Console UI for live run monitoring and graph inspection
 
 The baseline demo is **GPU-first** (`--device cuda` by default) with **auto fallback** to mock reasoning when NIM is unavailable.
 
@@ -24,7 +25,11 @@ robosikg/
 scripts/
   run_demo.py
   evaluate.py
+  run_web_console.py
 tests/
+robosikg/web/
+  app.py
+  static/
 compose.yaml
 docs/
   run_summary_schema.md
@@ -76,6 +81,15 @@ For meaningful scene semantics, keep `--pretrained` enabled. `--no-pretrained` u
 python3 scripts/evaluate.py --run out_demo/run_summary.json
 ```
 
+### 5) Launch Web Console
+
+```bash
+python3 scripts/run_web_console.py
+```
+
+Open:
+- `http://127.0.0.1:8080`
+
 ## NIM (Optional)
 
 Run local Cosmos Reason 2 NIM:
@@ -99,6 +113,20 @@ Optional overrides:
 - `ROBOSIKG_MODEL_NAME`
 
 In `--reasoning-mode auto`, the orchestrator attempts NIM first and switches to mock reasoner if NIM fails.
+
+## Ops Console
+
+The web console is a dark-glass cockpit UI with:
+- responsive 3-column app shell (left rail / main workspace / right dock)
+- live status over WebSockets (`/ws/live`)
+- run controls and MP4 upload (`/api/run`, `/api/upload`)
+- run history + summaries (`/api/runs`, `/api/runs/{id}`)
+- live ontology graph extraction from `graph.nt` (`/api/runs/{id}/graph`)
+
+Notes:
+- uploaded MP4 files are saved under `data/scratch/`
+- live runs are written as `out_web_<timestamp>_<id>/`
+- FAISS index is in-memory for each run (not persisted as a standalone index file)
 
 ## Reproducibility Notes
 

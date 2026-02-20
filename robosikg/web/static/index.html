@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RoboSIKG Ops Console</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="app-bg"></div>
+  <div class="app-shell">
+    <header class="top-bar panel glass reveal">
+      <div class="top-left">
+        <div class="brand-dot"></div>
+        <h1 class="app-title">Cosmos Ops Console</h1>
+        <select id="workspaceSelect" class="select compact">
+          <option value="default">Demo Workspace</option>
+          <option value="warehouse">Warehouse Ops</option>
+          <option value="traffic">Traffic Ops</option>
+        </select>
+      </div>
+
+      <div class="top-center">
+        <div class="chip status ok">
+          <span class="dot"></span>
+          <span id="chipStream">Idle</span>
+        </div>
+        <div class="chip">RTT: <span id="chipRtt">-- ms</span></div>
+        <div class="chip">FPS: <span id="chipFps">--</span></div>
+        <div class="chip">
+          Run:
+          <select id="runSelect" class="select inline"></select>
+        </div>
+      </div>
+
+      <div class="top-right">
+        <button id="pauseBtn" class="btn ghost">Pause</button>
+        <button id="resetBtn" class="btn ghost">Reset</button>
+        <button id="recordBtn" class="btn ghost">Record</button>
+        <button id="menuBtn" class="btn ghost">•••</button>
+      </div>
+    </header>
+
+    <div class="layout-grid">
+      <aside class="left-rail panel reveal delay-1">
+        <nav class="rail-nav">
+          <button class="rail-btn active" title="Perception">◉</button>
+          <button class="rail-btn" title="Reasoning">◈</button>
+          <button class="rail-btn" title="Warehouse">▣</button>
+          <button class="rail-btn" title="Graph">⎔</button>
+          <button class="rail-btn" title="Policy">⚑</button>
+          <button class="rail-btn" title="Settings">⚙</button>
+        </nav>
+      </aside>
+
+      <main class="main-workspace">
+        <section class="panel perception-panel reveal delay-2">
+          <header class="panel-header">
+            <h2>Perception / Video</h2>
+            <div class="panel-actions">
+              <button class="btn ghost small">Export</button>
+              <button class="btn ghost small">Overlays</button>
+            </div>
+          </header>
+
+          <div class="perception-body">
+            <div class="video-stack">
+              <div class="video-stage" id="videoStage">
+                <video id="videoPreview" preload="metadata" controls muted></video>
+                <div class="video-empty" id="videoEmpty">Load or upload an MP4 to begin.</div>
+                <div class="video-overlay">
+                  <span class="chip status ok">Streaming</span>
+                  <span class="chip">Mode: <span id="overlayMode">nim</span></span>
+                  <span class="chip">Device: <span id="overlayDevice">cuda</span></span>
+                </div>
+              </div>
+
+              <div class="timeline-wrap">
+                <div class="timeline-controls">
+                  <button id="timelinePlay" class="btn ghost small">Play</button>
+                  <button id="timelineStep" class="btn ghost small">Step</button>
+                  <span class="metric">Frames: <span id="metricFrames">0</span></span>
+                  <span class="metric">Regions: <span id="metricRegions">0</span></span>
+                  <span class="metric">Vectors: <span id="metricVectors">0</span></span>
+                </div>
+                <div class="scrub-track">
+                  <div class="scrub-progress" id="scrubProgress"></div>
+                </div>
+                <div class="toggle-row">
+                  <button class="pill active">Timeline</button>
+                  <button class="pill">Boxes</button>
+                  <button class="pill">Masks</button>
+                  <button class="pill">Tracks</button>
+                  <button class="pill">Labels</button>
+                </div>
+              </div>
+            </div>
+
+            <aside class="mini-feed panel-inner">
+              <div class="mini-feed-head">
+                <h3>Live Events</h3>
+                <span id="runStateBadge" class="badge idle">Idle</span>
+              </div>
+              <ul id="eventFeed" class="event-feed"></ul>
+            </aside>
+          </div>
+        </section>
+
+        <section class="graph-section">
+          <aside class="panel filters-panel reveal delay-3">
+            <header class="panel-header">
+              <h2>Graph Filters</h2>
+            </header>
+            <div id="graphFilters" class="filter-list"></div>
+          </aside>
+
+          <section class="panel graph-panel reveal delay-4">
+            <header class="panel-header">
+              <h2>Live Ontology Graph</h2>
+              <div class="panel-actions">
+                <button id="layoutBtn" class="btn ghost small">Layout</button>
+                <button id="refreshGraphBtn" class="btn ghost small">Refresh</button>
+              </div>
+            </header>
+
+            <div class="graph-canvas-wrap">
+              <canvas id="graphCanvas"></canvas>
+              <div id="graphEmpty" class="graph-empty">No graph loaded. Start a run or pick a prior run.</div>
+            </div>
+
+            <footer class="graph-footer">
+              <div class="legend">
+                <span class="legend-chip cyan">Region</span>
+                <span class="legend-chip green">Track</span>
+                <span class="legend-chip amber">Hazard</span>
+                <span class="legend-chip purple">Policy</span>
+              </div>
+              <div class="metric">Nodes: <span id="metricNodes">0</span></div>
+              <div class="metric">Edges: <span id="metricEdges">0</span></div>
+            </footer>
+          </section>
+        </section>
+      </main>
+
+      <aside class="right-dock">
+        <section class="panel instruction-panel reveal delay-2">
+          <header class="panel-header">
+            <h2>Operator Instruction</h2>
+          </header>
+
+          <textarea id="instructionInput" class="instruction-box" rows="3">Inspect the next 10 seconds. Build scene graph. Identify hazards. Suggest safe action.</textarea>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>MP4 path</span>
+              <input id="mp4PathInput" type="text" value="data/scratch/traffic.mp4">
+            </label>
+            <div class="field button-field">
+              <span>Upload MP4</span>
+              <button id="uploadBtn" class="btn ghost">Upload</button>
+              <input id="uploadInput" type="file" accept="video/mp4" hidden>
+            </div>
+            <label class="field">
+              <span>Source ID</span>
+              <input id="sourceIdInput" type="text" value="web_demo">
+            </label>
+            <label class="field">
+              <span>Reasoning Mode</span>
+              <select id="reasoningModeInput" class="select">
+                <option value="nim">nim</option>
+                <option value="auto">auto</option>
+                <option value="mock">mock</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Device</span>
+              <select id="deviceInput" class="select">
+                <option value="cuda">cuda</option>
+                <option value="cpu">cpu</option>
+              </select>
+            </label>
+            <label class="field checkbox-field">
+              <span>Pretrained</span>
+              <input id="pretrainedInput" type="checkbox" checked>
+            </label>
+            <label class="field">
+              <span>Sample FPS</span>
+              <input id="sampleFpsInput" type="number" step="0.5" min="0.5" max="60" value="5">
+            </label>
+            <label class="field">
+              <span>Max frames</span>
+              <input id="maxFramesInput" type="number" min="1" max="5000" value="300">
+            </label>
+            <label class="field">
+              <span>Reason every N</span>
+              <input id="reasonEveryInput" type="number" min="0" max="1000" value="25">
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <button class="pill active">Vision</button>
+            <button class="pill active">SLAM</button>
+            <button class="pill active">LLM</button>
+          </div>
+
+          <button id="runBtn" class="btn primary">Run Pipeline</button>
+        </section>
+
+        <section class="panel chat-panel reveal delay-3">
+          <header class="panel-header">
+            <h2>Chat / Trace</h2>
+          </header>
+          <div id="chatThread" class="chat-thread"></div>
+        </section>
+
+        <section class="panel inspector-panel reveal delay-4">
+          <header class="panel-header">
+            <h2>Node Inspector</h2>
+            <span class="accent">SPARQL</span>
+          </header>
+          <div id="nodeSummary" class="node-summary">
+            <div class="summary-title">Select a graph node</div>
+            <div class="summary-meta">Type and properties will appear here.</div>
+          </div>
+          <div id="nodeProps" class="properties-table"></div>
+          <label class="field mono-field">
+            <span>Query Editor</span>
+            <textarea id="sparqlEditor" class="mono" rows="4">PREFIX kg: &lt;https://example.org/robosikg#&gt;
+SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 25</textarea>
+          </label>
+          <div class="panel-actions">
+            <button id="copyQueryBtn" class="btn ghost small">Copy</button>
+            <button id="runQueryBtn" class="btn ghost small">Run</button>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>
+

@@ -4,7 +4,7 @@ import json
 import os
 import time
 from dataclasses import asdict, dataclass
-from typing import Any, Optional, Protocol
+from typing import Any, Callable, Optional, Protocol
 
 import numpy as np
 
@@ -87,6 +87,16 @@ class Orchestrator:
         self.events: list[dict[str, Any]] = []
         self.errors: list[dict[str, str]] = []
 
+    @staticmethod
+    def _emit_progress(progress_cb: Optional[Callable[[dict[str, Any]], None]], payload: dict[str, Any]) -> None:
+        if progress_cb is None:
+            return
+        try:
+            progress_cb(payload)
+        except Exception:
+            # Progress callbacks are best-effort and should never break pipeline execution.
+            return
+
     def _final_reasoning_backend(self) -> str:
         if self.cfg.reasoning.mode == "auto":
             return "mock(auto-fallback)" if self._auto_force_mock else "nim"
@@ -125,7 +135,11 @@ class Orchestrator:
             )
             return self._mock_reasoner.reason(rin), "mock"
 
-    def run_mp4(self, mp4_path: str) -> dict[str, Any]:
+    def run_mp4(
+        self,
+        mp4_path: str,
+        progress_cb: Optional[Callable[[dict[str, Any]], None]] = None,
+    ) -> dict[str, Any]:
         started_ns = time.time_ns()
         t_start = time.perf_counter()
 
@@ -183,6 +197,21 @@ class Orchestrator:
                 )
                 regions_added += 1
 
+            self._emit_progress(
+                progress_cb,
+                {
+                    "type": "frame",
+                    "frame_index": fr.index,
+                    "frame_uri": frame_uri,
+                    "t_ns": fr.t_ns,
+                    "frames_seen": frames_seen,
+                    "detections": len(dets),
+                    "tracks_confirmed": len(confirmed),
+                    "regions_added": regions_added,
+                    "vector_items": self.vstore.count(),
+                },
+            )
+
             reason_every = self.cfg.reasoning.reason_every_n_frames
             if reason_every > 0 and frames_seen % reason_every == 0:
                 ann = self.vstore.search(query=last_query_vec, k=5) if last_query_vec is not None else []
@@ -236,6 +265,17 @@ class Orchestrator:
                         else len(rout.trajectory_2d_norm_0_1000),
                     }
                 )
+                self._emit_progress(
+                    progress_cb,
+                    {
+                        "type": "reasoning",
+                        "backend": backend,
+                        "frame_uri": frame_uri,
+                        "summary": rout.summary,
+                        "claims": len(ordered_claims),
+                        "reasoning_invocations": self.reasoning_invocations,
+                    },
+                )
 
         if self.cfg.kg.persist_ttl:
             with open(self.art.ttl_path, "w", encoding="utf-8") as f:
@@ -275,5 +315,16 @@ class Orchestrator:
         }
         with open(self.art.summary_path, "w", encoding="utf-8") as f:
             json.dump(summary, f, indent=2, sort_keys=True)
+
+        self._emit_progress(
+            progress_cb,
+            {
+                "type": "complete",
+                "summary_path": self.art.summary_path,
+                "counts": summary["counts"],
+                "reasoning_backend": summary["reasoning_backend"],
+                "reasoning_fallbacks": summary["reasoning_fallbacks"],
+            },
+        )
 
         return summary
