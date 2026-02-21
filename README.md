@@ -103,7 +103,7 @@ The compose profile exposes:
 - `http://127.0.0.1:8000/v1/chat/completions`
 
 Default NIM endpoint used by demo:
-- `http://160.211.46.134:8000/v1/chat/completions`
+- `http://160.211.45.124:8000/v1/chat/completions`
 
 Default model used by demo:
 - `nvidia/cosmos-reason2-8b`
