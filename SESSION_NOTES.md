@@ -158,3 +158,45 @@ Added end-to-end debug trace support for NIM reasoning calls.
 - `pytest -q` -> `21 passed`.
 - Web console boot check: `timeout 6 python3 scripts/run_web_console.py` starts successfully.
 - Runtime check after install: `AutoWebSocketsProtocol is None` -> `False` (WebSocket support active).
+
+## Update: Full Console Backend Wiring + Graph Labels (Feb 22, 2026)
+
+### Added/changed
+- `robosikg/web/app.py`
+  - Added backend console state + action APIs:
+    - `GET /api/console/state`
+    - `POST /api/console/action`
+  - Added action handlers for workspace/rail/layers/modules/menu/pause/reset/record/instruction and graph/timeline action logging.
+  - Added cooperative run control hooks (pause/resume/stop) via `PipelineService` flags.
+  - Added run export endpoint:
+    - `POST /api/runs/{run_id}/export` -> zip bundle under `out_web_exports/`.
+  - Added SPARQL query endpoint:
+    - `POST /api/sparql/query`.
+  - Added export static mount at `/exports`.
+  - Added optional websocket recording to `out_web_recordings/*.jsonl`.
+  - Improved graph node labels to combine semantic context + short hash; node payload now also includes `short_id` and `cls`.
+- `robosikg/agent/orchestrator.py`
+  - Added optional `should_stop` / `wait_if_paused` callbacks to `run_mp4`.
+  - Added `counts.stopped_early`.
+- `robosikg/web/static/index.html`
+  - Added IDs for all control buttons for deterministic wiring.
+- `robosikg/web/static/app.js`
+  - Wired all visible control buttons to backend actions/endpoints.
+  - Added SPARQL query execution UI path and run export integration.
+  - Synced UI state from backend console snapshot + websocket `console_state` events.
+  - Added pause/resume and recording state UI updates.
+- `robosikg/web/static/styles.css`
+  - Added badge styles for `paused` and `stopped`.
+- `docs/web_console_controls.md`
+  - Added full button-by-button operator guide with backend endpoint mapping.
+- `README.md`
+  - Linked controls guide and documented new console/export/query APIs and label behavior.
+- `docs/run_summary_schema.md`
+  - Documented `counts.stopped_early`.
+
+### Validation
+- `pytest -q` -> `21 passed`.
+- `python3 -m py_compile robosikg/web/app.py robosikg/agent/orchestrator.py` -> success.
+- Web console boot check: `timeout 6 python3 scripts/run_web_console.py` -> startup success.
+- Endpoint smoke tests via `fastapi.testclient`:
+  - `/api/console/state`, `/api/console/action`, `/api/runs/{id}/export`, `/api/sparql/query` all returned `200`.

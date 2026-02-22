@@ -44,12 +44,12 @@
     <div class="layout-grid">
       <aside class="left-rail panel reveal delay-1">
         <nav class="rail-nav">
-          <button class="rail-btn active" title="Perception">◉</button>
-          <button class="rail-btn" title="Reasoning">◈</button>
-          <button class="rail-btn" title="Warehouse">▣</button>
-          <button class="rail-btn" title="Graph">⎔</button>
-          <button class="rail-btn" title="Policy">⚑</button>
-          <button class="rail-btn" title="Settings">⚙</button>
+              <button id="railPerceptionBtn" class="rail-btn active" title="Perception">◉</button>
+              <button id="railReasoningBtn" class="rail-btn" title="Reasoning">◈</button>
+              <button id="railWarehouseBtn" class="rail-btn" title="Warehouse">▣</button>
+              <button id="railGraphBtn" class="rail-btn" title="Graph">⎔</button>
+              <button id="railPolicyBtn" class="rail-btn" title="Policy">⚑</button>
+              <button id="railSettingsBtn" class="rail-btn" title="Settings">⚙</button>
         </nav>
       </aside>
 
@@ -58,8 +58,8 @@
           <header class="panel-header">
             <h2>Perception / Video</h2>
             <div class="panel-actions">
-              <button class="btn ghost small">Export</button>
-              <button class="btn ghost small">Overlays</button>
+              <button id="exportBtn" class="btn ghost small">Export</button>
+              <button id="overlaysBtn" class="btn ghost small">Overlays</button>
             </div>
           </header>
 
@@ -68,7 +68,7 @@
               <div class="video-stage" id="videoStage">
                 <video id="videoPreview" preload="metadata" controls muted></video>
                 <div class="video-empty" id="videoEmpty">Load or upload an MP4 to begin.</div>
-                <div class="video-overlay">
+                <div id="videoOverlay" class="video-overlay">
                   <span class="chip status ok">Streaming</span>
                   <span class="chip">Mode: <span id="overlayMode">nim</span></span>
                   <span class="chip">Device: <span id="overlayDevice">cuda</span></span>
@@ -87,11 +87,11 @@
                   <div class="scrub-progress" id="scrubProgress"></div>
                 </div>
                 <div class="toggle-row">
-                  <button class="pill active">Timeline</button>
-                  <button class="pill">Boxes</button>
-                  <button class="pill">Masks</button>
-                  <button class="pill">Tracks</button>
-                  <button class="pill">Labels</button>
+                  <button id="layerTimelineBtn" class="pill active">Timeline</button>
+                  <button id="layerBoxesBtn" class="pill">Boxes</button>
+                  <button id="layerMasksBtn" class="pill">Masks</button>
+                  <button id="layerTracksBtn" class="pill">Tracks</button>
+                  <button id="layerLabelsBtn" class="pill">Labels</button>
                 </div>
               </div>
             </div>
@@ -198,9 +198,9 @@
           </div>
 
           <div class="toggle-row">
-            <button class="pill active">Vision</button>
-            <button class="pill active">SLAM</button>
-            <button class="pill active">LLM</button>
+            <button id="moduleVisionBtn" class="pill active">Vision</button>
+            <button id="moduleSlamBtn" class="pill active">SLAM</button>
+            <button id="moduleLlmBtn" class="pill active">LLM</button>
           </div>
 
           <button id="runBtn" class="btn primary">Run Pipeline</button>
@@ -240,4 +240,3 @@ SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 25</textarea>
   <script type="module" src="/static/app.js"></script>
 </body>
 </html>
-

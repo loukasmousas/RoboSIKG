@@ -799,6 +799,16 @@ textarea:focus,
   border-color: rgba(124, 245, 140, 0.5);
 }
 
+.badge.paused {
+  color: #fff1c4;
+  border-color: rgba(247, 201, 72, 0.55);
+}
+
+.badge.stopped {
+  color: #ffd3dc;
+  border-color: rgba(255, 92, 122, 0.45);
+}
+
 .badge.failed {
   color: #ffd3dc;
   border-color: rgba(255, 92, 122, 0.55);
@@ -915,4 +925,3 @@ textarea:focus,
     grid-template-columns: 1fr;
   }
 }
-

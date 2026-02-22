@@ -14,6 +14,7 @@ Top-level fields:
   - `effective_fps` (`number`)
 - `counts` (`object`):
   - `frames_seen` (`integer`)
+  - `stopped_early` (`boolean`): true when operator requested stop before ingest completed.
   - `regions_added` (`integer`)
   - `tracks_seen` (`integer`)
   - `events_total` (`integer`)

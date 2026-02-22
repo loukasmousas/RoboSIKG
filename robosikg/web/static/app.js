@@ -2,10 +2,17 @@ const dom = {
   chipStream: document.getElementById("chipStream"),
   chipRtt: document.getElementById("chipRtt"),
   chipFps: document.getElementById("chipFps"),
+  workspaceSelect: document.getElementById("workspaceSelect"),
   pauseBtn: document.getElementById("pauseBtn"),
   resetBtn: document.getElementById("resetBtn"),
   recordBtn: document.getElementById("recordBtn"),
   menuBtn: document.getElementById("menuBtn"),
+  railPerceptionBtn: document.getElementById("railPerceptionBtn"),
+  railReasoningBtn: document.getElementById("railReasoningBtn"),
+  railWarehouseBtn: document.getElementById("railWarehouseBtn"),
+  railGraphBtn: document.getElementById("railGraphBtn"),
+  railPolicyBtn: document.getElementById("railPolicyBtn"),
+  railSettingsBtn: document.getElementById("railSettingsBtn"),
   runSelect: document.getElementById("runSelect"),
   runBtn: document.getElementById("runBtn"),
   runStateBadge: document.getElementById("runStateBadge"),
@@ -22,6 +29,17 @@ const dom = {
   scrubProgress: document.getElementById("scrubProgress"),
   timelinePlay: document.getElementById("timelinePlay"),
   timelineStep: document.getElementById("timelineStep"),
+  exportBtn: document.getElementById("exportBtn"),
+  overlaysBtn: document.getElementById("overlaysBtn"),
+  layerTimelineBtn: document.getElementById("layerTimelineBtn"),
+  layerBoxesBtn: document.getElementById("layerBoxesBtn"),
+  layerMasksBtn: document.getElementById("layerMasksBtn"),
+  layerTracksBtn: document.getElementById("layerTracksBtn"),
+  layerLabelsBtn: document.getElementById("layerLabelsBtn"),
+  moduleVisionBtn: document.getElementById("moduleVisionBtn"),
+  moduleSlamBtn: document.getElementById("moduleSlamBtn"),
+  moduleLlmBtn: document.getElementById("moduleLlmBtn"),
+  instructionInput: document.getElementById("instructionInput"),
   nodeSummary: document.getElementById("nodeSummary"),
   nodeProps: document.getElementById("nodeProps"),
   mp4PathInput: document.getElementById("mp4PathInput"),
@@ -41,6 +59,7 @@ const dom = {
   sparqlEditor: document.getElementById("sparqlEditor"),
   overlayMode: document.getElementById("overlayMode"),
   overlayDevice: document.getElementById("overlayDevice"),
+  videoOverlay: document.getElementById("videoOverlay"),
   videoPreview: document.getElementById("videoPreview"),
   videoStage: document.getElementById("videoStage"),
 };
@@ -49,11 +68,33 @@ const state = {
   ws: null,
   reconnectTimer: null,
   pingTimer: null,
+  startedAtMs: null,
   runs: [],
   selectedRunId: null,
   running: false,
+  paused: false,
+  recording: false,
+  recordingPath: null,
   activeConfig: {
     max_frames: Number(dom.maxFramesInput.value) || 1,
+  },
+  console: {
+    workspace: "default",
+    rail: "Perception",
+    overlays_visible: true,
+    layers: {
+      timeline: true,
+      boxes: false,
+      masks: false,
+      tracks: false,
+      labels: false,
+    },
+    modules: {
+      vision: true,
+      slam: true,
+      llm: true,
+    },
+    menu_open: false,
   },
   graph: {
     nodes: [],
@@ -116,6 +157,14 @@ async function apiJSON(url, options = {}) {
   return res.json();
 }
 
+async function postConsoleAction(action, payload = {}) {
+  return apiJSON("/api/console/action", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, payload }),
+  });
+}
+
 function clip(text, max = 120) {
   if (!text) return "";
   return text.length > max ? `${text.slice(0, max - 1)}...` : text;
@@ -125,17 +174,91 @@ function ts() {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
+function setPill(btn, enabled) {
+  if (!btn) return;
+  btn.classList.toggle("active", Boolean(enabled));
+}
+
+function setRailActive(railName) {
+  const mapping = {
+    Perception: dom.railPerceptionBtn,
+    Reasoning: dom.railReasoningBtn,
+    Warehouse: dom.railWarehouseBtn,
+    Graph: dom.railGraphBtn,
+    Policy: dom.railPolicyBtn,
+    Settings: dom.railSettingsBtn,
+  };
+  Object.values(mapping).forEach((btn) => btn && btn.classList.remove("active"));
+  const target = mapping[railName] || dom.railPerceptionBtn;
+  if (target) target.classList.add("active");
+}
+
+function syncConsoleState(consoleState) {
+  if (!consoleState || typeof consoleState !== "object") return;
+  state.console = {
+    ...state.console,
+    ...consoleState,
+    layers: { ...state.console.layers, ...(consoleState.layers || {}) },
+    modules: { ...state.console.modules, ...(consoleState.modules || {}) },
+  };
+  state.paused = Boolean(consoleState.run_paused);
+  state.recording = Boolean(consoleState.recording);
+  state.recordingPath = consoleState.recording_path || null;
+
+  if (dom.workspaceSelect && consoleState.workspace) {
+    dom.workspaceSelect.value = consoleState.workspace;
+  }
+  if (dom.instructionInput && consoleState.instruction && document.activeElement !== dom.instructionInput) {
+    dom.instructionInput.value = consoleState.instruction;
+  }
+  setRailActive(state.console.rail);
+  setPill(dom.layerTimelineBtn, state.console.layers.timeline);
+  setPill(dom.layerBoxesBtn, state.console.layers.boxes);
+  setPill(dom.layerMasksBtn, state.console.layers.masks);
+  setPill(dom.layerTracksBtn, state.console.layers.tracks);
+  setPill(dom.layerLabelsBtn, state.console.layers.labels);
+  setPill(dom.moduleVisionBtn, state.console.modules.vision);
+  setPill(dom.moduleSlamBtn, state.console.modules.slam);
+  setPill(dom.moduleLlmBtn, state.console.modules.llm);
+
+  if (dom.videoOverlay) {
+    dom.videoOverlay.style.display = state.console.overlays_visible ? "flex" : "none";
+  }
+  if (dom.pauseBtn) {
+    dom.pauseBtn.textContent = state.paused ? "Resume" : "Pause";
+  }
+  if (dom.recordBtn) {
+    dom.recordBtn.textContent = state.recording ? "Stop Rec" : "Record";
+  }
+}
+
 function setRunState(stateName, detail = "") {
   const normalized = stateName || "idle";
   dom.runStateBadge.textContent = normalized;
-  dom.runStateBadge.className = `badge ${normalized === "failed" ? "failed" : normalized === "running" ? "running" : "idle"}`;
+  dom.runStateBadge.className = `badge ${
+    normalized === "failed" ? "failed" : normalized === "running" || normalized === "starting" ? "running" : normalized
+  }`;
 
   if (normalized === "running" || normalized === "starting") {
+    if (state.startedAtMs === null) {
+      state.startedAtMs = performance.now();
+    }
     dom.chipStream.textContent = "Streaming";
+  } else if (normalized === "paused") {
+    dom.chipStream.textContent = "Paused";
+    state.paused = true;
   } else if (normalized === "failed") {
     dom.chipStream.textContent = "Error";
+    state.startedAtMs = null;
+  } else if (normalized === "completed" || normalized === "stopped") {
+    dom.chipStream.textContent = normalized === "stopped" ? "Stopped" : "Idle";
+    state.startedAtMs = null;
   } else {
     dom.chipStream.textContent = "Idle";
+    state.startedAtMs = null;
+  }
+  if (dom.pauseBtn) {
+    dom.pauseBtn.textContent = normalized === "paused" ? "Resume" : "Pause";
   }
 
   if (detail) {
@@ -176,6 +299,10 @@ function updateMetrics(patch) {
   dom.metricFrames.textContent = String(state.metrics.frames_seen ?? 0);
   dom.metricRegions.textContent = String(state.metrics.regions_added ?? 0);
   dom.metricVectors.textContent = String(state.metrics.vector_items ?? 0);
+  if (state.startedAtMs !== null && state.running) {
+    const elapsedS = Math.max(0.001, (performance.now() - state.startedAtMs) / 1000);
+    dom.chipFps.textContent = (Number(state.metrics.frames_seen || 0) / elapsedS).toFixed(2);
+  }
 }
 
 function updateScrub(framesSeen = 0) {
@@ -247,6 +374,23 @@ function resetDashboardView() {
   updateNodeInspector(null);
   drawGraph();
   pushEvent("Dashboard selection reset", "ui");
+}
+
+async function applyConsoleAction(action, payload = {}, pushActionEvent = false) {
+  const out = await postConsoleAction(action, payload);
+  syncConsoleState(out.state || {});
+  if (pushActionEvent && out.message) {
+    pushEvent(out.message, "control");
+  }
+  return out;
+}
+
+function bindConsoleActionButton(btn, action, payload = {}) {
+  bindButton(btn, () => {
+    applyConsoleAction(action, payload).catch((err) => {
+      pushChat("error", `Action ${action} failed: ${err.message}`);
+    });
+  });
 }
 
 function hashCode(input) {
@@ -407,7 +551,7 @@ function drawGraph() {
   for (const node of nodes) {
     const pos = state.graph.positions.get(node.id);
     if (!pos) continue;
-    const label = node.label || "node";
+    const label = clip(node.label || "node", 34);
     const padX = 10;
     const padY = 7;
     const textWidth = Math.max(28, ctx.measureText(label).width);
@@ -468,13 +612,15 @@ function updateNodeInspector(node) {
 
   dom.nodeSummary.innerHTML = `
     <div class="summary-title">${node.label}</div>
-    <div class="summary-meta">Type: ${node.group} · Confidence: --</div>
+    <div class="summary-meta">Type: ${node.group}${node.cls ? ` · Class: ${node.cls}` : ""}</div>
   `;
 
   const rows = [
     ["id", node.id],
+    ["short_id", node.short_id || ""],
     ["label", node.label],
     ["group", node.group],
+    ["cls", node.cls || ""],
   ];
   dom.nodeProps.innerHTML = rows
     .map(
@@ -554,6 +700,45 @@ async function loadRun(runId) {
       pushChat("reasoner", clip(event.summary || "", 260));
     }
   }
+}
+
+async function exportSelectedRun() {
+  if (!state.selectedRunId) {
+    pushEvent("Select a run before exporting", "export");
+    return;
+  }
+  const out = await apiJSON(`/api/runs/${encodeURIComponent(state.selectedRunId)}/export`, { method: "POST" });
+  pushEvent(`Exported ${out.archive_path}`, "export", `${out.size_bytes} bytes`);
+  pushChat("export", `Bundle ready: ${out.archive_path} (${(out.files || []).join(", ")})`);
+}
+
+async function runSparqlEditorQuery() {
+  const runId = state.selectedRunId || dom.runSelect.value;
+  if (!runId) {
+    pushChat("query", "Select a run first.");
+    return;
+  }
+  const query = dom.sparqlEditor.value.trim();
+  if (!query) {
+    pushChat("query", "Query editor is empty.");
+    return;
+  }
+  const out = await apiJSON("/api/sparql/query", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ run_id: runId, query, limit: 50 }),
+  });
+  const previewRows = (out.rows || [])
+    .slice(0, 5)
+    .map((r) => r.map((v) => clip(v, 48)).join(" | "))
+    .join("\n");
+  pushEvent(`SPARQL rows: ${out.row_count}${out.truncated ? " (truncated)" : ""}`, "query");
+  pushChat(
+    "query",
+    out.row_count
+      ? `<pre>${clip((out.columns || []).join(" | "), 240)}\n${clip(previewRows, 1200)}</pre>`
+      : "No rows returned."
+  );
 }
 
 async function startRun() {
@@ -636,7 +821,8 @@ function handleSocketMessage(msg) {
 
   if (msg.type === "run_state") {
     const stateName = msg.state || "idle";
-    state.running = stateName === "running" || stateName === "starting";
+    state.running = stateName === "running" || stateName === "starting" || stateName === "paused";
+    state.paused = stateName === "paused";
     setRunState(stateName, msg.detail || "");
     dom.runBtn.disabled = state.running;
     if (msg.config) {
@@ -653,6 +839,14 @@ function handleSocketMessage(msg) {
 
   if (msg.type === "run_event") {
     handleRunEvent(msg.event);
+    return;
+  }
+
+  if (msg.type === "console_state") {
+    syncConsoleState(msg.state || {});
+    if (msg.message) {
+      pushEvent(msg.message, "control");
+    }
   }
 }
 
@@ -699,27 +893,32 @@ async function pollHealth() {
     const health = await apiJSON("/api/health");
     const dt = performance.now() - t0;
     dom.chipRtt.textContent = `${dt.toFixed(0)} ms`;
-    if (health.running) {
+    state.running = Boolean(health.running);
+    state.paused = Boolean(health.paused);
+    if (health.running && health.paused) {
+      dom.chipStream.textContent = "Paused";
+    } else if (health.running) {
       dom.chipStream.textContent = "Streaming";
+    } else if (!state.running) {
+      dom.chipFps.textContent = "--";
     }
   } catch (_err) {
     dom.chipRtt.textContent = "offline";
   }
 }
 
-function wirePlaceholderButtons() {
-  const buttons = document.querySelectorAll("button");
-  for (const btn of buttons) {
-    if (!(btn instanceof HTMLElement)) continue;
-    if (btn.dataset.wired === "1") continue;
-    bindButton(btn, () => {
-      const label = clip((btn.textContent || "Button").trim(), 28);
-      pushEvent(`${label} is UI-only in this build`, "ui");
-    });
-  }
-}
-
 function bindUI() {
+  bindEvent(dom.workspaceSelect, "change", () => {
+    applyConsoleAction("select_workspace", { workspace: dom.workspaceSelect.value }).catch((err) => {
+      pushChat("error", `Workspace change failed: ${err.message}`);
+    });
+  });
+  bindEvent(dom.instructionInput, "change", () => {
+    applyConsoleAction("set_instruction", { text: dom.instructionInput.value }).catch((err) => {
+      pushChat("error", `Instruction update failed: ${err.message}`);
+    });
+  });
+
   bindButton(dom.runBtn, () => {
     startRun().catch((err) => {
       pushChat("error", `Failed to start run: ${err.message}`);
@@ -741,17 +940,58 @@ function bindUI() {
   bindEvent(dom.mp4PathInput, "change", () => setVideoFromPath(dom.mp4PathInput.value));
 
   bindButton(dom.refreshGraphBtn, () => {
+    applyConsoleAction("refresh_graph", {}, false).catch(() => {});
     if (!state.selectedRunId) return;
     loadRun(state.selectedRunId).catch((err) => pushChat("error", `Graph refresh failed: ${err.message}`));
   });
 
-  bindButton(dom.layoutBtn, relayoutGraph);
-  bindButton(dom.timelinePlay, toggleVideoPlayback);
-  bindButton(dom.timelineStep, () => stepVideo(0.25));
-  bindButton(dom.pauseBtn, toggleVideoPlayback);
-  bindButton(dom.resetBtn, resetDashboardView);
-  bindButton(dom.recordBtn, () => pushEvent("Record pipeline not implemented yet", "ui"));
-  bindButton(dom.menuBtn, () => pushEvent("Menu actions not implemented yet", "ui"));
+  bindButton(dom.exportBtn, () => {
+    exportSelectedRun().catch((err) => pushChat("error", `Export failed: ${err.message}`));
+  });
+  bindButton(dom.overlaysBtn, () => {
+    applyConsoleAction("toggle_overlays").catch((err) => pushChat("error", `Overlay toggle failed: ${err.message}`));
+  });
+
+  bindConsoleActionButton(dom.railPerceptionBtn, "select_rail", { rail: "Perception" });
+  bindConsoleActionButton(dom.railReasoningBtn, "select_rail", { rail: "Reasoning" });
+  bindConsoleActionButton(dom.railWarehouseBtn, "select_rail", { rail: "Warehouse" });
+  bindConsoleActionButton(dom.railGraphBtn, "select_rail", { rail: "Graph" });
+  bindConsoleActionButton(dom.railPolicyBtn, "select_rail", { rail: "Policy" });
+  bindConsoleActionButton(dom.railSettingsBtn, "select_rail", { rail: "Settings" });
+
+  bindConsoleActionButton(dom.layerTimelineBtn, "toggle_layer", { layer: "timeline" });
+  bindConsoleActionButton(dom.layerBoxesBtn, "toggle_layer", { layer: "boxes" });
+  bindConsoleActionButton(dom.layerMasksBtn, "toggle_layer", { layer: "masks" });
+  bindConsoleActionButton(dom.layerTracksBtn, "toggle_layer", { layer: "tracks" });
+  bindConsoleActionButton(dom.layerLabelsBtn, "toggle_layer", { layer: "labels" });
+
+  bindConsoleActionButton(dom.moduleVisionBtn, "toggle_module", { module: "vision" });
+  bindConsoleActionButton(dom.moduleSlamBtn, "toggle_module", { module: "slam" });
+  bindConsoleActionButton(dom.moduleLlmBtn, "toggle_module", { module: "llm" });
+
+  bindButton(dom.layoutBtn, () => {
+    applyConsoleAction("layout_graph").catch(() => {}).finally(() => relayoutGraph());
+  });
+  bindButton(dom.timelinePlay, () => {
+    applyConsoleAction("timeline_play").catch(() => {}).finally(() => toggleVideoPlayback());
+  });
+  bindButton(dom.timelineStep, () => {
+    applyConsoleAction("timeline_step").catch(() => {}).finally(() => stepVideo(0.25));
+  });
+  bindButton(dom.pauseBtn, () => {
+    applyConsoleAction("toggle_pause").catch((err) => pushChat("error", `Pause/resume failed: ${err.message}`));
+  });
+  bindButton(dom.resetBtn, () => {
+    applyConsoleAction("reset_console").then(() => {
+      resetDashboardView();
+    }).catch((err) => pushChat("error", `Reset failed: ${err.message}`));
+  });
+  bindButton(dom.recordBtn, () => {
+    applyConsoleAction("toggle_record").catch((err) => pushChat("error", `Record toggle failed: ${err.message}`));
+  });
+  bindButton(dom.menuBtn, () => {
+    applyConsoleAction("toggle_menu").catch((err) => pushChat("error", `Menu toggle failed: ${err.message}`));
+  });
 
   bindButton(dom.copyQueryBtn, async () => {
     try {
@@ -763,16 +1003,18 @@ function bindUI() {
   });
 
   bindButton(dom.runQueryBtn, () => {
-    pushChat("query", "Query preview mode: use selected node properties and graph filters.");
+    runSparqlEditorQuery().catch((err) => pushChat("error", `SPARQL query failed: ${err.message}`));
   });
 
   bindEvent(window, "resize", () => drawGraph());
   installGraphInteractions();
-  wirePlaceholderButtons();
 }
 
 async function init() {
   bindUI();
+  await apiJSON("/api/console/state")
+    .then((snapshot) => syncConsoleState(snapshot))
+    .catch((err) => pushChat("error", `Failed to load console state: ${err.message}`));
   connectSocket();
   setVideoFromPath(dom.mp4PathInput.value);
   await refreshRuns().catch((err) => pushChat("error", `Failed to load runs: ${err.message}`));

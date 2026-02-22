@@ -311,6 +311,8 @@ class Orchestrator:
         self,
         mp4_path: str,
         progress_cb: Optional[Callable[[dict[str, Any]], None]] = None,
+        should_stop: Optional[Callable[[], bool]] = None,
+        wait_if_paused: Optional[Callable[[], None]] = None,
     ) -> dict[str, Any]:
         started_ns = time.time_ns()
         t_start = time.perf_counter()
@@ -324,6 +326,7 @@ class Orchestrator:
         regions_added = 0
         tracks_added: set[int] = set()
         last_query_vec: Optional[np.ndarray] = None
+        stopped_early = False
 
         for fr in iter_mp4(
             mp4_path,
@@ -331,6 +334,15 @@ class Orchestrator:
             max_frames=self.cfg.ingest.max_frames,
             timestamp_origin_ns=self.cfg.ingest.timestamp_origin_ns,
         ):
+            if should_stop is not None and should_stop():
+                stopped_early = True
+                break
+            if wait_if_paused is not None:
+                wait_if_paused()
+                if should_stop is not None and should_stop():
+                    stopped_early = True
+                    break
+
             frames_seen += 1
             current_regions: list[dict[str, Any]] = []
 
@@ -554,6 +566,7 @@ class Orchestrator:
                 "reasoning_debug_entries": self.reasoning_debug_entries,
                 "kg_triples": self.kg.triple_count(),
                 "vector_items": self.vstore.count(),
+                "stopped_early": stopped_early,
             },
             "events": self.events[-200:],
             "artifacts": {
@@ -576,6 +589,7 @@ class Orchestrator:
                 "counts": summary["counts"],
                 "reasoning_backend": summary["reasoning_backend"],
                 "reasoning_fallbacks": summary["reasoning_fallbacks"],
+                "stopped_early": stopped_early,
             },
         )
 

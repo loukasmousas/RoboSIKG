@@ -125,12 +125,21 @@ The web console is a dark-glass cockpit UI with:
 - run controls and MP4 upload (`/api/run`, `/api/upload`)
 - run history + summaries (`/api/runs`, `/api/runs/{id}`)
 - live ontology graph extraction from `graph.nt` (`/api/runs/{id}/graph`)
+- operator console state/actions (`/api/console/state`, `/api/console/action`)
+- run export bundles (`/api/runs/{id}/export`)
+- SPARQL query execution for selected run (`/api/sparql/query`)
 
 Notes:
 - uploaded MP4 files are saved under `data/scratch/`
 - live runs are written as `out_web_<timestamp>_<id>/`
 - FAISS index is in-memory for each run (not persisted as a standalone index file)
 - live updates require WebSocket support (`websockets` package from `requirements.txt`)
+- exports are written under `out_web_exports/` and served at `/exports/...`
+- optional console recording files are written under `out_web_recordings/`
+- graph node labels combine semantic context + short hash (for example `Region car #006711e9db`)
+
+Button-by-button console guide:
+- `docs/web_console_controls.md`
 
 ## Reproducibility Notes
 
