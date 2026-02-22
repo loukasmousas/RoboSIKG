@@ -2,6 +2,10 @@ const dom = {
   chipStream: document.getElementById("chipStream"),
   chipRtt: document.getElementById("chipRtt"),
   chipFps: document.getElementById("chipFps"),
+  pauseBtn: document.getElementById("pauseBtn"),
+  resetBtn: document.getElementById("resetBtn"),
+  recordBtn: document.getElementById("recordBtn"),
+  menuBtn: document.getElementById("menuBtn"),
   runSelect: document.getElementById("runSelect"),
   runBtn: document.getElementById("runBtn"),
   runStateBadge: document.getElementById("runStateBadge"),
@@ -16,6 +20,8 @@ const dom = {
   metricNodes: document.getElementById("metricNodes"),
   metricEdges: document.getElementById("metricEdges"),
   scrubProgress: document.getElementById("scrubProgress"),
+  timelinePlay: document.getElementById("timelinePlay"),
+  timelineStep: document.getElementById("timelineStep"),
   nodeSummary: document.getElementById("nodeSummary"),
   nodeProps: document.getElementById("nodeProps"),
   mp4PathInput: document.getElementById("mp4PathInput"),
@@ -28,6 +34,7 @@ const dom = {
   reasonEveryInput: document.getElementById("reasonEveryInput"),
   uploadBtn: document.getElementById("uploadBtn"),
   uploadInput: document.getElementById("uploadInput"),
+  layoutBtn: document.getElementById("layoutBtn"),
   refreshGraphBtn: document.getElementById("refreshGraphBtn"),
   copyQueryBtn: document.getElementById("copyQueryBtn"),
   runQueryBtn: document.getElementById("runQueryBtn"),
@@ -63,6 +70,18 @@ const state = {
     vector_items: 0,
   },
 };
+
+function bindEvent(el, eventName, handler) {
+  if (!el) return;
+  el.addEventListener(eventName, handler);
+  if (el instanceof HTMLElement) {
+    el.dataset.wired = "1";
+  }
+}
+
+function bindButton(el, handler) {
+  bindEvent(el, "click", handler);
+}
 
 const PALETTE = (() => {
   const css = getComputedStyle(document.documentElement);
@@ -177,6 +196,57 @@ function setVideoFromPath(path) {
   if (!filename) return;
   dom.videoPreview.src = `/media/${encodeURIComponent(filename)}`;
   dom.videoStage.classList.add("has-video");
+}
+
+function toggleVideoPlayback() {
+  if (!dom.videoPreview || !dom.videoPreview.src) {
+    pushEvent("No video loaded for playback control", "video");
+    return;
+  }
+  if (dom.videoPreview.paused) {
+    dom.videoPreview.play().then(() => {
+      pushEvent("Video playback resumed", "video");
+    }).catch((err) => {
+      pushChat("error", `Video playback failed: ${err.message}`);
+    });
+  } else {
+    dom.videoPreview.pause();
+    pushEvent("Video playback paused", "video");
+  }
+}
+
+function stepVideo(seconds = 0.25) {
+  if (!dom.videoPreview || !dom.videoPreview.src) {
+    pushEvent("No video loaded for stepping", "video");
+    return;
+  }
+  const duration = Number.isFinite(dom.videoPreview.duration) ? dom.videoPreview.duration : 0;
+  const next = dom.videoPreview.currentTime + seconds;
+  dom.videoPreview.currentTime = duration > 0 ? Math.min(duration, next) : Math.max(0, next);
+  pushEvent(`Stepped video by ${seconds.toFixed(2)}s`, "video");
+}
+
+function relayoutGraph() {
+  const nodes = state.graph.nodes || [];
+  if (!nodes.length) {
+    pushEvent("No graph loaded to relayout", "graph");
+    return;
+  }
+  ensureCanvasSize();
+  const dpr = window.devicePixelRatio || 1;
+  const w = dom.graphCanvas.width / dpr;
+  const h = dom.graphCanvas.height / dpr;
+  state.graph.positions = buildInitialPositions(state.graph.nodes, w, h);
+  relaxLayout(state.graph.nodes, state.graph.edges, state.graph.positions, w, h);
+  drawGraph();
+  pushEvent("Graph layout recomputed", "graph");
+}
+
+function resetDashboardView() {
+  state.graph.selectedNodeId = null;
+  updateNodeInspector(null);
+  drawGraph();
+  pushEvent("Dashboard selection reset", "ui");
 }
 
 function hashCode(input) {
@@ -637,33 +707,53 @@ async function pollHealth() {
   }
 }
 
+function wirePlaceholderButtons() {
+  const buttons = document.querySelectorAll("button");
+  for (const btn of buttons) {
+    if (!(btn instanceof HTMLElement)) continue;
+    if (btn.dataset.wired === "1") continue;
+    bindButton(btn, () => {
+      const label = clip((btn.textContent || "Button").trim(), 28);
+      pushEvent(`${label} is UI-only in this build`, "ui");
+    });
+  }
+}
+
 function bindUI() {
-  dom.runBtn.addEventListener("click", () => {
+  bindButton(dom.runBtn, () => {
     startRun().catch((err) => {
       pushChat("error", `Failed to start run: ${err.message}`);
       dom.runBtn.disabled = false;
     });
   });
 
-  dom.runSelect.addEventListener("change", () => {
+  bindEvent(dom.runSelect, "change", () => {
     loadRun(dom.runSelect.value).catch((err) => pushChat("error", `Failed to load run: ${err.message}`));
   });
 
-  dom.uploadBtn.addEventListener("click", () => dom.uploadInput.click());
-  dom.uploadInput.addEventListener("change", () => {
+  bindButton(dom.uploadBtn, () => dom.uploadInput.click());
+  bindEvent(dom.uploadInput, "change", () => {
     const [file] = dom.uploadInput.files || [];
     if (!file) return;
     uploadVideo(file).catch((err) => pushChat("error", `Upload failed: ${err.message}`));
   });
 
-  dom.mp4PathInput.addEventListener("change", () => setVideoFromPath(dom.mp4PathInput.value));
+  bindEvent(dom.mp4PathInput, "change", () => setVideoFromPath(dom.mp4PathInput.value));
 
-  dom.refreshGraphBtn.addEventListener("click", () => {
+  bindButton(dom.refreshGraphBtn, () => {
     if (!state.selectedRunId) return;
     loadRun(state.selectedRunId).catch((err) => pushChat("error", `Graph refresh failed: ${err.message}`));
   });
 
-  dom.copyQueryBtn.addEventListener("click", async () => {
+  bindButton(dom.layoutBtn, relayoutGraph);
+  bindButton(dom.timelinePlay, toggleVideoPlayback);
+  bindButton(dom.timelineStep, () => stepVideo(0.25));
+  bindButton(dom.pauseBtn, toggleVideoPlayback);
+  bindButton(dom.resetBtn, resetDashboardView);
+  bindButton(dom.recordBtn, () => pushEvent("Record pipeline not implemented yet", "ui"));
+  bindButton(dom.menuBtn, () => pushEvent("Menu actions not implemented yet", "ui"));
+
+  bindButton(dom.copyQueryBtn, async () => {
     try {
       await navigator.clipboard.writeText(dom.sparqlEditor.value);
       pushEvent("SPARQL copied to clipboard", "query");
@@ -672,12 +762,13 @@ function bindUI() {
     }
   });
 
-  dom.runQueryBtn.addEventListener("click", () => {
+  bindButton(dom.runQueryBtn, () => {
     pushChat("query", "Query preview mode: use selected node properties and graph filters.");
   });
 
-  window.addEventListener("resize", () => drawGraph());
+  bindEvent(window, "resize", () => drawGraph());
   installGraphInteractions();
+  wirePlaceholderButtons();
 }
 
 async function init() {

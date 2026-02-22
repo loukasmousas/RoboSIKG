@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from robosikg.agent.orchestrator import Orchestrator
     from robosikg.config import DemoConfig
 
-DEFAULT_NIM_BASE_URL = os.getenv("ROBOSIKG_NIM_BASE_URL", "http://160.211.45.124:8000/v1")
+DEFAULT_NIM_BASE_URL = os.getenv("ROBOSIKG_NIM_BASE_URL", "http://160.211.46.122:8000/v1")
 DEFAULT_MODEL_NAME = os.getenv("ROBOSIKG_MODEL_NAME", "nvidia/cosmos-reason2-8b")
 
 
@@ -31,6 +31,7 @@ def build_config(args: argparse.Namespace):
         cfg.perception,
         device=args.device,
         pretrained=args.pretrained,
+        score_thresh=args.score_thresh,
         require_cuda=(args.device == "cuda"),
     )
     reasoning_cfg = replace(
@@ -39,6 +40,7 @@ def build_config(args: argparse.Namespace):
         reason_every_n_frames=args.reason_every_n_frames,
         nim_base_url=args.nim_base_url,
         model_name=args.model_name,
+        debug_capture=args.reasoning_debug,
     )
     return replace(cfg, ingest=ingest_cfg, perception=perception_cfg, reasoning=reasoning_cfg)
 
@@ -51,9 +53,11 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--reasoning-mode", choices=["auto", "nim", "mock"], default="auto")
     ap.add_argument("--device", choices=["cuda", "cpu"], default="cuda")
     ap.add_argument("--pretrained", action=argparse.BooleanOptionalAction, default=True)
+    ap.add_argument("--score-thresh", type=float, default=0.5)
     ap.add_argument("--max-frames", type=int, default=500)
     ap.add_argument("--sample-fps", type=float, default=5.0)
     ap.add_argument("--reason-every-n-frames", type=int, default=50)
+    ap.add_argument("--reasoning-debug", action=argparse.BooleanOptionalAction, default=False)
     ap.add_argument("--nim-base-url", default=DEFAULT_NIM_BASE_URL)
     ap.add_argument("--model-name", default=DEFAULT_MODEL_NAME)
     return ap.parse_args()

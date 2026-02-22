@@ -15,6 +15,7 @@ def test_reasoning_schema_valid_payload():
                 "confidence": 0.8,
             }
         ],
+        "no_claim_reason": None,
         "suggested_queries": ["SELECT * WHERE { ?s ?p ?o } LIMIT 1"],
         "trajectory_2d_norm_0_1000": [{"point_2d": [10, 20], "label": "step0"}],
     }
@@ -40,3 +41,15 @@ def test_reasoning_schema_rejects_invalid_uri():
     }
     with pytest.raises(ReasoningSchemaError):
         parse_reasoning_output(payload)
+
+
+def test_reasoning_schema_accepts_no_claim_reason_with_empty_claims():
+    payload = {
+        "summary": "insufficient evidence",
+        "claims": [],
+        "no_claim_reason": "insufficient_evidence",
+        "suggested_queries": [],
+    }
+    parsed = parse_reasoning_output(payload)
+    assert parsed.claims == []
+    assert parsed.no_claim_reason == "insufficient_evidence"

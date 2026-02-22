@@ -69,7 +69,9 @@ Key flags:
 - `--reasoning-mode {auto,nim,mock}`
 - `--device {cuda,cpu}`
 - `--pretrained / --no-pretrained`
+- `--score-thresh` (0.0-1.0 detector confidence filter)
 - `--sample-fps`, `--max-frames`, `--reason-every-n-frames`
+- `--reasoning-debug / --no-reasoning-debug` (write `reasoning_debug.jsonl`)
 - `--nim-base-url`, `--model-name`
 
 If CUDA is unavailable in `--device cuda` mode, startup fails fast with an actionable error.
@@ -103,7 +105,7 @@ The compose profile exposes:
 - `http://127.0.0.1:8000/v1/chat/completions`
 
 Default NIM endpoint used by demo:
-- `http://160.211.45.124:8000/v1/chat/completions`
+- `http://160.211.46.122:8000/v1/chat/completions`
 
 Default model used by demo:
 - `nvidia/cosmos-reason2-8b`
@@ -113,6 +115,7 @@ Optional overrides:
 - `ROBOSIKG_MODEL_NAME`
 
 In `--reasoning-mode auto`, the orchestrator attempts NIM first and switches to mock reasoner if NIM fails.
+If NIM returns zero claims, the orchestrator adds bounded deterministic fallback claims from geometry (`near`/`inside`/`overlaps`) and ANN retrieval neighbors.
 
 ## Ops Console
 
@@ -127,6 +130,7 @@ Notes:
 - uploaded MP4 files are saved under `data/scratch/`
 - live runs are written as `out_web_<timestamp>_<id>/`
 - FAISS index is in-memory for each run (not persisted as a standalone index file)
+- live updates require WebSocket support (`websockets` package from `requirements.txt`)
 
 ## Reproducibility Notes
 
@@ -137,6 +141,7 @@ Notes:
   - `graph.nt` (sorted n-triples for deterministic diffing)
   - `run_summary.json`
   - `eval_report.json`
+  - `reasoning_debug.jsonl` (only when `--reasoning-debug` is enabled)
 
 See `docs/run_summary_schema.md` for summary fields.
 

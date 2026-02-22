@@ -176,13 +176,15 @@ class RunRequest(BaseModel):
     reasoning_mode: Literal["auto", "nim", "mock"] = "nim"
     device: Literal["cuda", "cpu"] = "cuda"
     pretrained: bool = True
+    score_thresh: float = Field(default=0.5, ge=0.0, le=1.0)
     max_frames: int = Field(default=300, ge=1, le=5000)
     sample_fps: float = Field(default=5.0, gt=0.0, le=120.0)
     reason_every_n_frames: int = Field(default=25, ge=0, le=10000)
+    reasoning_debug: bool = False
     nim_base_url: str | None = None
     model_name: str | None = None
 
-    model_config = {"extra": "forbid"}
+    model_config = {"extra": "forbid", "protected_namespaces": ()}
 
 
 class LiveHub:
@@ -252,12 +254,14 @@ class PipelineService:
             cfg.perception,
             device=req.device,
             pretrained=req.pretrained,
+            score_thresh=req.score_thresh,
             require_cuda=(req.device == "cuda"),
         )
         reasoning_cfg = replace(
             cfg.reasoning,
             mode=req.reasoning_mode,
             reason_every_n_frames=req.reason_every_n_frames,
+            debug_capture=req.reasoning_debug,
             nim_base_url=req.nim_base_url or cfg.reasoning.nim_base_url,
             model_name=req.model_name or cfg.reasoning.model_name,
         )
