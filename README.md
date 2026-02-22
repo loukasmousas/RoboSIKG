@@ -116,6 +116,7 @@ Optional overrides:
 
 In `--reasoning-mode auto`, the orchestrator attempts NIM first and switches to mock reasoner if NIM fails.
 If NIM returns zero claims, the orchestrator adds bounded deterministic fallback claims from geometry (`near`/`inside`/`overlaps`) and ANN retrieval neighbors.
+If NIM omits trajectory points, the orchestrator adds a bounded deterministic 2D trajectory fallback from tracker motion context.
 
 ## Ops Console
 
@@ -125,6 +126,7 @@ The web console is a dark-glass cockpit UI with:
 - run controls and MP4 upload (`/api/run`, `/api/upload`)
 - run history + summaries (`/api/runs`, `/api/runs/{id}`)
 - live ontology graph extraction from `graph.nt` (`/api/runs/{id}/graph`)
+- run overlay extraction from `graph.nt` (`/api/runs/{id}/overlays`)
 - operator console state/actions (`/api/console/state`, `/api/console/action`)
 - run export bundles (`/api/runs/{id}/export`)
 - SPARQL query execution for selected run (`/api/sparql/query`)
@@ -137,6 +139,10 @@ Notes:
 - exports are written under `out_web_exports/` and served at `/exports/...`
 - optional console recording files are written under `out_web_recordings/`
 - graph node labels combine semantic context + short hash (for example `Region car #006711e9db`)
+- video overlays are rendered on a stage canvas (boxes/masks/tracks/labels + trajectory when present)
+- timeline `Full` control enters fullscreen for the full stage (video + overlays)
+- double-click on video requests the same stage fullscreen path
+- browser-native video fullscreen controls are browser-managed; use timeline `Full` when overlays are required
 
 Button-by-button console guide:
 - `docs/web_console_controls.md`

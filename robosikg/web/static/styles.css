@@ -77,6 +77,18 @@ body {
   backdrop-filter: blur(12px);
 }
 
+.panel.focused {
+  border-color: rgba(59, 199, 245, 0.72);
+  box-shadow:
+    inset 0 0 0 1px rgba(59, 199, 245, 0.42),
+    0 0 0 1px rgba(59, 199, 245, 0.24),
+    0 10px 32px rgba(2, 5, 13, 0.38);
+}
+
+.is-hidden {
+  display: none !important;
+}
+
 .glass {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
@@ -237,9 +249,15 @@ body {
 #videoPreview {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
   background: #090b10;
+}
+
+.video-stage:fullscreen {
+  border-radius: 0;
+  border-color: rgba(59, 199, 245, 0.55);
+  background: #05070b;
 }
 
 .video-empty {
@@ -263,6 +281,16 @@ body {
   left: 10px;
   display: flex;
   gap: 8px;
+  z-index: 3;
+}
+
+.video-layer-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
 }
 
 .timeline-wrap {

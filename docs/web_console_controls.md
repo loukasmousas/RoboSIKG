@@ -24,6 +24,7 @@ This guide documents every control in the Ops Console and what each one does.
 - `Perception`, `Reasoning`, `Warehouse`, `Graph`, `Policy`, `Settings`:
   - Sets active rail focus state in backend (`select_rail`).
   - Used for operator context persistence.
+  - Also drives section visibility/focus in the UI (contextual workspace view).
 
 ## Perception / Video Panel
 
@@ -36,8 +37,29 @@ This guide documents every control in the Ops Console and what each one does.
   - Toggles video preview playback and logs backend action (`timeline_play`).
 - `Step`:
   - Steps preview forward by 0.25s and logs backend action (`timeline_step`).
+- `Full`:
+  - Requests fullscreen on the video stage container (video + overlay canvas).
+  - This is the reliable fullscreen path when overlays are enabled.
+  - Double-click on video also routes to this fullscreen path.
 - Layer pills:
   - `Timeline`, `Boxes`, `Masks`, `Tracks`, `Labels` toggle backend layer state (`toggle_layer`).
+  - `Boxes`, `Masks`, `Tracks`, `Labels` are rendered client-side on top of video.
+  - `Tracks` also draws trajectory polylines when reasoning payload includes trajectory points.
+
+### Overlay Data Behavior
+
+- During a live run:
+  - Frame events include `boxes` and `tracks`, so overlays update from websocket stream.
+- When loading a historical run:
+  - UI fetches `GET /api/runs/{run_id}/overlays` and maps video time to nearest available source-frame index.
+  - This avoids periodic overlay dropouts when sampled frame indices are sparse (for example `0, 8, 16, ...`).
+
+### Native Video Fullscreen Notes
+
+- Browser-native fullscreen controls (inside the `<video>` element) are browser-managed.
+- The app performs best-effort promotion from native video fullscreen to stage fullscreen so overlays remain visible.
+- Native fullscreen control clicks are additionally bridged via pointer/click heuristics to request stage fullscreen directly.
+- Browser policy may still prevent retargeting in some environments; when that happens, use `Full` in the timeline controls for guaranteed overlay fullscreen.
 
 ## Graph Panel
 

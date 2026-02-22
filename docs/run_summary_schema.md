@@ -31,6 +31,15 @@ Top-level fields:
   - `kg_triples` (`integer`)
   - `vector_items` (`integer`)
 - `events` (`array<object>`): recent run events (claims, summaries, fallbacks).
+  - `reasoning_summary` event keys include:
+    - `backend` (`string`)
+    - `frame` (`string`)
+    - `summary` (`string`)
+    - `no_claim_reason` (`string|null`)
+    - `claim_source` (`string`)
+    - `claims` (`integer`)
+    - `trajectory_points` (`integer`)
+    - `trajectory_source` (`string`): `nim` or `track_motion_fallback`
 - `artifacts` (`object`):
   - `ttl` (`string|null`)
   - `ntriples_sorted` (`string|null`)

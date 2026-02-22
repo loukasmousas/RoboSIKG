@@ -257,6 +257,106 @@ def _build_graph_payload(summary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _build_overlay_payload(summary: dict[str, Any]) -> dict[str, Any]:
+    artifacts = summary.get("artifacts", {})
+    nt_path = _resolve_artifact_path(artifacts.get("ntriples_sorted"))
+    if nt_path is None:
+        return {"frames": {}, "frame_count": 0}
+
+    g = Graph()
+    try:
+        g.parse(nt_path, format="nt")
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to parse graph.nt: {exc}") from exc
+
+    pred_seen_in = URIRef(f"{KG_BASE_IRI}seenIn")
+    pred_cls = URIRef(f"{KG_BASE_IRI}cls")
+    pred_score = URIRef(f"{KG_BASE_IRI}score")
+    pred_bbox_x1 = URIRef(f"{KG_BASE_IRI}bboxX1")
+    pred_bbox_y1 = URIRef(f"{KG_BASE_IRI}bboxY1")
+    pred_bbox_x2 = URIRef(f"{KG_BASE_IRI}bboxX2")
+    pred_bbox_y2 = URIRef(f"{KG_BASE_IRI}bboxY2")
+    pred_track_of = URIRef(f"{KG_BASE_IRI}trackOf")
+    pred_frame_index = URIRef(f"{KG_BASE_IRI}frameIndex")
+
+    frame_index_by_uri: dict[str, int] = {}
+    for subj, _pred, obj in g.triples((None, pred_frame_index, None)):
+        if not isinstance(subj, URIRef) or not isinstance(obj, RDFLiteral):
+            continue
+        try:
+            frame_index_by_uri[str(subj)] = int(obj)
+        except Exception:
+            continue
+
+    track_cls_by_uri: dict[str, str] = {}
+    for subj, _pred, obj in g.triples((None, pred_cls, None)):
+        if isinstance(subj, URIRef) and isinstance(obj, RDFLiteral):
+            track_cls_by_uri[str(subj)] = str(obj)[:32]
+
+    def _literal_float(subject: URIRef, predicate: URIRef) -> float | None:
+        for obj in g.objects(subject, predicate):
+            if isinstance(obj, RDFLiteral):
+                try:
+                    return float(obj)
+                except Exception:
+                    return None
+        return None
+
+    def _literal_str(subject: URIRef, predicate: URIRef) -> str | None:
+        for obj in g.objects(subject, predicate):
+            if isinstance(obj, RDFLiteral):
+                return str(obj)
+        return None
+
+    def _uri_obj(subject: URIRef, predicate: URIRef) -> str | None:
+        for obj in g.objects(subject, predicate):
+            if isinstance(obj, URIRef):
+                return str(obj)
+        return None
+
+    by_frame: dict[int, dict[str, Any]] = {}
+
+    for subj, _pred, frame_obj in g.triples((None, pred_seen_in, None)):
+        if not isinstance(subj, URIRef) or not isinstance(frame_obj, URIRef):
+            continue
+        frame_index = frame_index_by_uri.get(str(frame_obj))
+        if frame_index is None:
+            continue
+
+        x1 = _literal_float(subj, pred_bbox_x1)
+        y1 = _literal_float(subj, pred_bbox_y1)
+        x2 = _literal_float(subj, pred_bbox_x2)
+        y2 = _literal_float(subj, pred_bbox_y2)
+        if None in {x1, y1, x2, y2}:
+            continue
+        cls = _literal_str(subj, pred_cls) or "obj"
+        score = _literal_float(subj, pred_score)
+
+        frame_row = by_frame.setdefault(frame_index, {"boxes": [], "tracks": []})
+        frame_row["boxes"].append(
+            {
+                "bbox": [x1, y1, x2, y2],
+                "cls": cls,
+                "score": float(score) if score is not None else None,
+            }
+        )
+
+        track_uri = _uri_obj(subj, pred_track_of)
+        if track_uri:
+            frame_row["tracks"].append(
+                {
+                    "track_id": _short_label(track_uri),
+                    "bbox": [x1, y1, x2, y2],
+                    "cls": track_cls_by_uri.get(track_uri, cls),
+                }
+            )
+
+    return {
+        "frames": {str(k): by_frame[k] for k in sorted(by_frame)},
+        "frame_count": len(by_frame),
+    }
+
+
 class RunRequest(BaseModel):
     mp4_path: str = Field(default="data/scratch/traffic.mp4", min_length=1)
     source_id: str = Field(default="web_demo", min_length=1, max_length=120)
@@ -731,6 +831,14 @@ def create_app() -> FastAPI:
         summary_path = _summary_path_for_run(run_name)
         summary = _read_summary(summary_path)
         return _build_graph_payload(summary)
+
+    @app.get("/api/runs/{run_name}/overlays")
+    async def get_run_overlays(run_name: str) -> dict[str, Any]:
+        summary_path = _summary_path_for_run(run_name)
+        summary = _read_summary(summary_path)
+        out = _build_overlay_payload(summary)
+        out["run_id"] = run_name
+        return out
 
     @app.post("/api/runs/{run_name}/export")
     async def export_run_bundle(run_name: str) -> dict[str, Any]:

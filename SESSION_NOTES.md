@@ -200,3 +200,73 @@ Added end-to-end debug trace support for NIM reasoning calls.
 - Web console boot check: `timeout 6 python3 scripts/run_web_console.py` -> startup success.
 - Endpoint smoke tests via `fastapi.testclient`:
   - `/api/console/state`, `/api/console/action`, `/api/runs/{id}/export`, `/api/sparql/query` all returned `200`.
+
+## Update: Overlay Rendering + Historical Overlay API + Rail Focus (Feb 22, 2026)
+
+### Added/changed
+- `robosikg/web/static/index.html`
+  - Added overlay canvas layer inside video stage.
+  - Added timeline `Full` control for stage fullscreen.
+- `robosikg/web/static/styles.css`
+  - Added video overlay canvas stacking styles and focused panel visuals.
+  - Switched video fit to `object-fit: contain` so source frame fits panel cleanly.
+- `robosikg/web/static/app.js`
+  - Added live overlay drawing for `Boxes` / `Masks` / `Tracks` / `Labels`.
+  - Added section visibility/focus behavior for left rail contexts.
+  - Added historical overlay sync tied to video time and nearest source-frame key.
+  - Added fullscreen handling for stage redraw and native fullscreen promotion attempts.
+- `robosikg/web/app.py`
+  - Added `GET /api/runs/{run_id}/overlays` endpoint.
+  - Parses `graph.nt` and emits per-frame `boxes`/`tracks` payload for replay overlays.
+- `robosikg/agent/orchestrator.py`
+  - Added frame-level overlay payload (`frame_width`, `frame_height`, `boxes`, `tracks`) to live `frame` progress events.
+
+### Behavior notes
+- Historical overlay frame keys are source-frame indices (can be sparse, for example `0, 8, 16, ...`).
+- UI mapping now uses nearest available frame key at or before current video time to avoid periodic overlay dropout.
+- Browser-native `<video>` fullscreen remains browser-managed; timeline `Full` is the deterministic path for overlay fullscreen.
+
+### Validation
+- `pytest -q` -> `21 passed`.
+- Web console startup check: `timeout 6 python3 scripts/run_web_console.py` -> startup success.
+- Overlay endpoint smoke check:
+  - `GET /api/runs/out_web_20260222_150136_ac96/overlays` returned `200` with `frame_count=50`.
+
+## Update: Deterministic Trajectory Fallback + Trajectory Overlay (Feb 22, 2026)
+
+### Added/changed
+- `robosikg/agent/orchestrator.py`
+  - Added deterministic 2D trajectory fallback from tracker motion when model omits trajectory:
+    - chooses highest-speed confirmed track
+    - projects future center points in image space
+    - normalizes to `[0, 1000]`
+  - Added trajectory payload into live `reasoning` websocket events:
+    - `trajectory_2d_norm_0_1000`
+    - `trajectory_points`
+    - `trajectory_source` (`nim` or `track_motion_fallback`)
+  - Added `trajectory_source` to `reasoning_summary` events in `run_summary.json`.
+- `robosikg/web/static/app.js`
+  - Added trajectory overlay renderer (polyline + waypoints + optional labels).
+  - Clears trajectory state when switching/starting runs.
+- `docs/run_summary_schema.md`
+  - Documented `reasoning_summary.trajectory_source`.
+
+### Validation
+- `python3 -m py_compile robosikg/agent/orchestrator.py robosikg/web/app.py` -> success.
+- `pytest -q` -> `21 passed`.
+
+## Update: Native Video Fullscreen Overlay Interop (Feb 22, 2026)
+
+### Added/changed
+- `robosikg/web/static/app.js`
+  - Added best-effort promotion when browser enters native `<video>` fullscreen:
+    - attempts retargeting fullscreen to stage container (`videoStage`) so overlays remain visible.
+  - Added double-click-to-stage-fullscreen behavior.
+  - Added pointer/click heuristics near native fullscreen control hotspot to request stage fullscreen directly.
+
+### Behavior notes
+- Browser-native media controls remain browser-managed and may block retargeting in some environments.
+- Timeline `Full` control is still the deterministic overlay fullscreen path across browsers.
+
+### Validation
+- `pytest -q` -> `21 passed`.

@@ -260,6 +260,84 @@ class Orchestrator:
         return claims
 
     @staticmethod
+    def _trajectory_payload(points: Any) -> list[dict[str, Any]]:
+        if points is None:
+            return []
+        out: list[dict[str, Any]] = []
+        for idx, item in enumerate(points):
+            row: dict[str, Any] | None = None
+            if hasattr(item, "model_dump"):
+                try:
+                    row = item.model_dump()  # pydantic model
+                except Exception:
+                    row = None
+            elif isinstance(item, dict):
+                row = item
+            if row is None:
+                continue
+            pt = row.get("point_2d")
+            if not isinstance(pt, (list, tuple)) or len(pt) < 2:
+                continue
+            try:
+                x = float(pt[0])
+                y = float(pt[1])
+            except (TypeError, ValueError):
+                continue
+            x = max(0.0, min(1000.0, x))
+            y = max(0.0, min(1000.0, y))
+            label = str(row.get("label") or f"p{idx}")
+            out.append({"point_2d": [x, y], "label": label})
+        return out
+
+    @staticmethod
+    def _deterministic_trajectory_from_track_motion(
+        track_motion: list[dict[str, Any]],
+        frame_hw: tuple[int, int],
+        horizon_points: int = 5,
+    ) -> list[dict[str, Any]]:
+        if not track_motion:
+            return []
+        frame_h, frame_w = int(frame_hw[0]), int(frame_hw[1])
+        if frame_h <= 1 or frame_w <= 1:
+            return []
+
+        def _speed(row: dict[str, Any]) -> float:
+            try:
+                return float(row.get("speed_px_per_frame", 0.0))
+            except (TypeError, ValueError):
+                return 0.0
+
+        top = max(track_motion, key=_speed)
+        bbox = top.get("bbox_xyxy")
+        if not isinstance(bbox, (list, tuple)) or len(bbox) < 4:
+            return []
+        try:
+            x1, y1, x2, y2 = [float(v) for v in bbox[:4]]
+        except (TypeError, ValueError):
+            return []
+
+        vel = top.get("velocity_xy_px_per_frame")
+        vx, vy = 0.0, 0.0
+        if isinstance(vel, (list, tuple)) and len(vel) >= 2:
+            try:
+                vx = float(vel[0])
+                vy = float(vel[1])
+            except (TypeError, ValueError):
+                vx, vy = 0.0, 0.0
+
+        cx = (x1 + x2) / 2.0
+        cy = (y1 + y2) / 2.0
+        pts: list[dict[str, Any]] = []
+        steps = max(2, int(horizon_points))
+        for step in range(steps):
+            px = max(0.0, min(float(frame_w - 1), cx + vx * step))
+            py = max(0.0, min(float(frame_h - 1), cy + vy * step))
+            nx = max(0.0, min(1000.0, (px / float(frame_w)) * 1000.0))
+            ny = max(0.0, min(1000.0, (py / float(frame_h)) * 1000.0))
+            pts.append({"point_2d": [nx, ny], "label": "now" if step == 0 else f"t+{step}"})
+        return pts
+
+    @staticmethod
     def _emit_progress(progress_cb: Optional[Callable[[dict[str, Any]], None]], payload: dict[str, Any]) -> None:
         if progress_cb is None:
             return
@@ -401,10 +479,28 @@ class Orchestrator:
                     "type": "frame",
                     "frame_index": fr.index,
                     "frame_uri": frame_uri,
+                    "frame_width": int(fr.bgr.shape[1]),
+                    "frame_height": int(fr.bgr.shape[0]),
                     "t_ns": fr.t_ns,
                     "frames_seen": frames_seen,
                     "detections": len(dets),
                     "tracks_confirmed": len(confirmed),
+                    "boxes": [
+                        {
+                            "bbox": [float(x) for x in det.bbox_xyxy],
+                            "cls": det.cls,
+                            "score": float(det.score),
+                        }
+                        for det in dets
+                    ],
+                    "tracks": [
+                        {
+                            "track_id": int(tr.track_id),
+                            "bbox": [float(x) for x in tr.bbox_xyxy],
+                            "cls": tr.cls,
+                        }
+                        for tr in confirmed
+                    ],
                     "regions_added": regions_added,
                     "vector_items": self.vstore.count(),
                 },
@@ -499,7 +595,18 @@ class Orchestrator:
                         }
                     )
 
-                trajectory_points = 0 if rout.trajectory_2d_norm_0_1000 is None else len(rout.trajectory_2d_norm_0_1000)
+                trajectory_payload = self._trajectory_payload(rout.trajectory_2d_norm_0_1000)
+                trajectory_source = "nim"
+                if not trajectory_payload:
+                    trajectory_payload = self._deterministic_trajectory_from_track_motion(
+                        track_motion=track_motion,
+                        frame_hw=(int(fr.bgr.shape[0]), int(fr.bgr.shape[1])),
+                        horizon_points=5,
+                    )
+                    if trajectory_payload:
+                        trajectory_source = "track_motion_fallback"
+
+                trajectory_points = len(trajectory_payload)
                 self.reasoning_trajectory_points_total += trajectory_points
                 self.events.append(
                     {
@@ -511,6 +618,7 @@ class Orchestrator:
                         "claim_source": claim_source,
                         "claims": claim_count,
                         "trajectory_points": trajectory_points,
+                        "trajectory_source": trajectory_source,
                     }
                 )
                 self._emit_progress(
@@ -522,6 +630,9 @@ class Orchestrator:
                         "summary": rout.summary,
                         "claims": claim_count,
                         "reasoning_invocations": self.reasoning_invocations,
+                        "trajectory_points": trajectory_points,
+                        "trajectory_source": trajectory_source,
+                        "trajectory_2d_norm_0_1000": trajectory_payload,
                     },
                 )
 

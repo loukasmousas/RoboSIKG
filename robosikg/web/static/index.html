@@ -67,6 +67,7 @@
             <div class="video-stack">
               <div class="video-stage" id="videoStage">
                 <video id="videoPreview" preload="metadata" controls muted></video>
+                <canvas id="videoLayerCanvas" class="video-layer-canvas"></canvas>
                 <div class="video-empty" id="videoEmpty">Load or upload an MP4 to begin.</div>
                 <div id="videoOverlay" class="video-overlay">
                   <span class="chip status ok">Streaming</span>
@@ -79,6 +80,7 @@
                 <div class="timeline-controls">
                   <button id="timelinePlay" class="btn ghost small">Play</button>
                   <button id="timelineStep" class="btn ghost small">Step</button>
+                  <button id="timelineFullscreen" class="btn ghost small">Full</button>
                   <span class="metric">Frames: <span id="metricFrames">0</span></span>
                   <span class="metric">Regions: <span id="metricRegions">0</span></span>
                   <span class="metric">Vectors: <span id="metricVectors">0</span></span>

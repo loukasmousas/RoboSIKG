@@ -29,6 +29,7 @@ const dom = {
   scrubProgress: document.getElementById("scrubProgress"),
   timelinePlay: document.getElementById("timelinePlay"),
   timelineStep: document.getElementById("timelineStep"),
+  timelineFullscreen: document.getElementById("timelineFullscreen"),
   exportBtn: document.getElementById("exportBtn"),
   overlaysBtn: document.getElementById("overlaysBtn"),
   layerTimelineBtn: document.getElementById("layerTimelineBtn"),
@@ -61,7 +62,14 @@ const dom = {
   overlayDevice: document.getElementById("overlayDevice"),
   videoOverlay: document.getElementById("videoOverlay"),
   videoPreview: document.getElementById("videoPreview"),
+  videoLayerCanvas: document.getElementById("videoLayerCanvas"),
   videoStage: document.getElementById("videoStage"),
+  perceptionPanel: document.querySelector(".perception-panel"),
+  graphPanel: document.querySelector(".graph-panel"),
+  graphSection: document.querySelector(".graph-section"),
+  instructionPanel: document.querySelector(".instruction-panel"),
+  chatPanel: document.querySelector(".chat-panel"),
+  inspectorPanel: document.querySelector(".inspector-panel"),
 };
 
 const state = {
@@ -109,6 +117,21 @@ const state = {
     frames_seen: 0,
     regions_added: 0,
     vector_items: 0,
+  },
+  overlay: {
+    sourceWidth: 0,
+    sourceHeight: 0,
+    frameIndex: null,
+    boxes: [],
+    tracks: [],
+    trajectory: [],
+    trackTrails: new Map(),
+    historyByRun: new Map(),
+    historyRunId: null,
+    historySampleFps: 5,
+    fullscreenHintShown: false,
+    promotingFullscreen: false,
+    nativeFsCandidate: false,
   },
 };
 
@@ -212,6 +235,7 @@ function syncConsoleState(consoleState) {
     dom.instructionInput.value = consoleState.instruction;
   }
   setRailActive(state.console.rail);
+  applyRailFocus(state.console.rail);
   setPill(dom.layerTimelineBtn, state.console.layers.timeline);
   setPill(dom.layerBoxesBtn, state.console.layers.boxes);
   setPill(dom.layerMasksBtn, state.console.layers.masks);
@@ -224,11 +248,50 @@ function syncConsoleState(consoleState) {
   if (dom.videoOverlay) {
     dom.videoOverlay.style.display = state.console.overlays_visible ? "flex" : "none";
   }
+  if (dom.menuBtn) {
+    dom.menuBtn.textContent = state.console.menu_open ? "Close" : "•••";
+  }
+  drawVideoLayers();
   if (dom.pauseBtn) {
     dom.pauseBtn.textContent = state.paused ? "Resume" : "Pause";
   }
   if (dom.recordBtn) {
     dom.recordBtn.textContent = state.recording ? "Stop Rec" : "Record";
+  }
+}
+
+function applyRailFocus(railName) {
+  const panels = [dom.perceptionPanel, dom.graphPanel, dom.instructionPanel, dom.chatPanel, dom.inspectorPanel];
+  panels.forEach((panel) => panel && panel.classList.remove("focused"));
+  const mapping = {
+    Perception: dom.perceptionPanel,
+    Reasoning: dom.chatPanel,
+    Warehouse: dom.instructionPanel,
+    Graph: dom.graphPanel,
+    Policy: dom.inspectorPanel,
+    Settings: dom.instructionPanel,
+  };
+  const target = mapping[railName];
+  if (!target) return;
+  target.classList.add("focused");
+
+  const visibility = {
+    Perception: [dom.perceptionPanel, dom.graphSection, dom.instructionPanel, dom.chatPanel, dom.inspectorPanel],
+    Reasoning: [dom.perceptionPanel, dom.chatPanel, dom.inspectorPanel],
+    Warehouse: [dom.perceptionPanel, dom.instructionPanel],
+    Graph: [dom.graphSection, dom.inspectorPanel],
+    Policy: [dom.graphSection, dom.inspectorPanel, dom.chatPanel],
+    Settings: [dom.instructionPanel],
+  };
+  const allSections = [dom.perceptionPanel, dom.graphSection, dom.instructionPanel, dom.chatPanel, dom.inspectorPanel];
+  const visibleSet = new Set((visibility[railName] || visibility.Perception).filter(Boolean));
+  allSections.forEach((el) => {
+    if (!el) return;
+    el.classList.toggle("is-hidden", !visibleSet.has(el));
+  });
+
+  if (window.innerWidth <= 1180) {
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 }
 
@@ -323,6 +386,338 @@ function setVideoFromPath(path) {
   if (!filename) return;
   dom.videoPreview.src = `/media/${encodeURIComponent(filename)}`;
   dom.videoStage.classList.add("has-video");
+  clearVideoLayers();
+}
+
+function clearVideoLayers() {
+  state.overlay.frameIndex = null;
+  state.overlay.boxes = [];
+  state.overlay.tracks = [];
+  state.overlay.trajectory = [];
+  state.overlay.trackTrails = new Map();
+  drawVideoLayers();
+}
+
+function toNumberOr(defaultValue, value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : defaultValue;
+}
+
+function updateOverlayFrame(evt) {
+  const frameIndex = toNumberOr(state.overlay.frameIndex ?? 0, evt.frame_index);
+  state.overlay.sourceWidth = toNumberOr(state.overlay.sourceWidth || dom.videoPreview.videoWidth || 0, evt.frame_width);
+  state.overlay.sourceHeight = toNumberOr(state.overlay.sourceHeight || dom.videoPreview.videoHeight || 0, evt.frame_height);
+  applyOverlayFrameData(frameIndex, {
+    boxes: Array.isArray(evt.boxes) ? evt.boxes : [],
+    tracks: Array.isArray(evt.tracks) ? evt.tracks : [],
+  });
+}
+
+function applyOverlayFrameData(frameIndex, data) {
+  if (frameIndex === null || frameIndex === undefined) return;
+  const previousIndex = state.overlay.frameIndex;
+  const normalizedFrameIndex = Number(frameIndex);
+  if (!Number.isFinite(normalizedFrameIndex)) return;
+  if (previousIndex !== null && Math.abs(normalizedFrameIndex - Number(previousIndex)) > 30) {
+    state.overlay.trackTrails = new Map();
+  }
+  const boxes = Array.isArray(data?.boxes) ? data.boxes : [];
+  const tracks = Array.isArray(data?.tracks) ? data.tracks : [];
+  if (previousIndex !== null && Number(previousIndex) === normalizedFrameIndex) {
+    state.overlay.boxes = boxes;
+    state.overlay.tracks = tracks;
+    drawVideoLayers();
+    return;
+  }
+  state.overlay.frameIndex = normalizedFrameIndex;
+  state.overlay.boxes = boxes;
+  state.overlay.tracks = tracks;
+
+  for (const track of tracks) {
+    const id = String(track.track_id ?? "");
+    if (!id || !Array.isArray(track.bbox) || track.bbox.length < 4) continue;
+    const center = {
+      x: (Number(track.bbox[0]) + Number(track.bbox[2])) / 2,
+      y: (Number(track.bbox[1]) + Number(track.bbox[3])) / 2,
+    };
+    const hist = state.overlay.trackTrails.get(id) || [];
+    hist.push(center);
+    if (hist.length > 14) hist.shift();
+    state.overlay.trackTrails.set(id, hist);
+  }
+  drawVideoLayers();
+}
+
+function applyTrajectoryPoints(points) {
+  if (!Array.isArray(points) || !points.length) {
+    state.overlay.trajectory = [];
+    drawVideoLayers();
+    return;
+  }
+
+  state.overlay.trajectory = points
+    .map((row, idx) => {
+      const point = Array.isArray(row?.point_2d) ? row.point_2d : null;
+      if (!point || point.length < 2) return null;
+      const x = Number(point[0]);
+      const y = Number(point[1]);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+      return {
+        point_2d: [Math.min(1000, Math.max(0, x)), Math.min(1000, Math.max(0, y))],
+        label: String(row?.label || `p${idx}`),
+      };
+    })
+    .filter(Boolean);
+  drawVideoLayers();
+}
+
+function medianFrameStep(frameKeys) {
+  if (!Array.isArray(frameKeys) || frameKeys.length < 2) return 1;
+  const gaps = [];
+  for (let i = 1; i < frameKeys.length; i += 1) {
+    const gap = Number(frameKeys[i]) - Number(frameKeys[i - 1]);
+    if (Number.isFinite(gap) && gap > 0) gaps.push(gap);
+  }
+  if (!gaps.length) return 1;
+  gaps.sort((a, b) => a - b);
+  return gaps[Math.floor(gaps.length / 2)];
+}
+
+function findNearestFrameAtOrBefore(sortedFrameKeys, target) {
+  if (!sortedFrameKeys.length) return null;
+  let lo = 0;
+  let hi = sortedFrameKeys.length - 1;
+  let out = sortedFrameKeys[0];
+  while (lo <= hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    const cur = sortedFrameKeys[mid];
+    if (cur <= target) {
+      out = cur;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return out;
+}
+
+function syncHistoricalOverlayForCurrentTime() {
+  if (state.running) return;
+  const runId = state.overlay.historyRunId;
+  if (!runId) return;
+  const overlayPack = state.overlay.historyByRun.get(runId);
+  if (!overlayPack) return;
+  const frameKeys = overlayPack.frameKeys || [];
+  if (!frameKeys.length) return;
+
+  const sampleFps = Math.max(0.001, Number(state.overlay.historySampleFps || 5));
+  const step = Math.max(1, Number(overlayPack.frameStep || 1));
+  const sourceFps = Math.max(
+    0.001,
+    Number(overlayPack.sourceFpsGuess || sampleFps),
+    step * sampleFps
+  );
+
+  const targetFrameIndex = Math.max(0, (dom.videoPreview.currentTime || 0) * sourceFps);
+  const selectedFrameKey = findNearestFrameAtOrBefore(frameKeys, targetFrameIndex);
+  if (selectedFrameKey === null) return;
+  const data = overlayPack.frameMap.get(String(selectedFrameKey)) || { boxes: [], tracks: [] };
+  applyOverlayFrameData(selectedFrameKey, data);
+}
+
+async function loadRunOverlays(runId, sampleFps) {
+  if (!runId) return;
+  const out = await apiJSON(`/api/runs/${encodeURIComponent(runId)}/overlays`);
+  const frameObj = out.frames || {};
+  const frameMap = new Map(Object.entries(frameObj));
+  const frameKeys = Object.keys(frameObj)
+    .map((k) => Number(k))
+    .filter((n) => Number.isFinite(n))
+    .sort((a, b) => a - b);
+  const sample = Math.max(0.001, Number(sampleFps || 5) || 5);
+  const step = medianFrameStep(frameKeys);
+  const sourceFpsGuess = Math.max(sample, step * sample);
+  state.overlay.historyByRun.set(runId, {
+    frameMap,
+    frameKeys,
+    sourceFpsGuess,
+    frameStep: step,
+  });
+  state.overlay.historyRunId = runId;
+  state.overlay.historySampleFps = sample;
+  syncHistoricalOverlayForCurrentTime();
+}
+
+function canvasContext2d() {
+  if (!dom.videoLayerCanvas) return null;
+  return dom.videoLayerCanvas.getContext("2d");
+}
+
+function ensureVideoCanvasSize() {
+  if (!dom.videoLayerCanvas || !dom.videoStage) return null;
+  const dpr = window.devicePixelRatio || 1;
+  const width = Math.max(1, Math.floor(dom.videoStage.clientWidth));
+  const height = Math.max(1, Math.floor(dom.videoStage.clientHeight));
+  dom.videoLayerCanvas.width = Math.floor(width * dpr);
+  dom.videoLayerCanvas.height = Math.floor(height * dpr);
+  dom.videoLayerCanvas.style.width = `${width}px`;
+  dom.videoLayerCanvas.style.height = `${height}px`;
+  return { width, height, dpr };
+}
+
+function videoTransform(canvasWidth, canvasHeight) {
+  const srcW = state.overlay.sourceWidth || dom.videoPreview.videoWidth || canvasWidth;
+  const srcH = state.overlay.sourceHeight || dom.videoPreview.videoHeight || canvasHeight;
+  if (!srcW || !srcH) {
+    return { scale: 1, offsetX: 0, offsetY: 0, srcW: canvasWidth, srcH: canvasHeight };
+  }
+  const fitMode = String(getComputedStyle(dom.videoPreview).objectFit || "contain").toLowerCase();
+  const scale =
+    fitMode === "cover"
+      ? Math.max(canvasWidth / srcW, canvasHeight / srcH)
+      : Math.min(canvasWidth / srcW, canvasHeight / srcH);
+  const renderedW = srcW * scale;
+  const renderedH = srcH * scale;
+  const offsetX = (canvasWidth - renderedW) / 2;
+  const offsetY = (canvasHeight - renderedH) / 2;
+  return { scale, offsetX, offsetY, srcW, srcH };
+}
+
+function drawVideoLayers() {
+  const ctx = canvasContext2d();
+  const size = ensureVideoCanvasSize();
+  if (!ctx || !size) return;
+  const { width, height, dpr } = size;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+  if (!state.console.overlays_visible) return;
+
+  const showBoxes = Boolean(state.console.layers.boxes);
+  const showMasks = Boolean(state.console.layers.masks);
+  const showTracks = Boolean(state.console.layers.tracks);
+  const showLabels = Boolean(state.console.layers.labels);
+  if (!showBoxes && !showMasks && !showTracks && !showLabels) return;
+
+  const { scale, offsetX, offsetY, srcW, srcH } = videoTransform(width, height);
+  const toCanvasRect = (bbox) => {
+    const x1 = Number(bbox[0]) * scale + offsetX;
+    const y1 = Number(bbox[1]) * scale + offsetY;
+    const x2 = Number(bbox[2]) * scale + offsetX;
+    const y2 = Number(bbox[3]) * scale + offsetY;
+    return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
+  };
+  const toCanvasPointFromNorm = (point2d) => {
+    const nx = Number(point2d[0]);
+    const ny = Number(point2d[1]);
+    const px = (Math.min(1000, Math.max(0, nx)) / 1000) * srcW;
+    const py = (Math.min(1000, Math.max(0, ny)) / 1000) * srcH;
+    return {
+      x: px * scale + offsetX,
+      y: py * scale + offsetY,
+    };
+  };
+
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.font = "12px Inter";
+
+  for (const box of state.overlay.boxes) {
+    if (!Array.isArray(box.bbox) || box.bbox.length < 4) continue;
+    const rect = toCanvasRect(box.bbox);
+
+    if (showMasks) {
+      ctx.fillStyle = "rgba(59, 199, 245, 0.16)";
+      ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    }
+    if (showBoxes) {
+      ctx.strokeStyle = "rgba(59, 199, 245, 0.95)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    }
+    if (showLabels) {
+      const cls = String(box.cls || "obj");
+      const score = Number.isFinite(Number(box.score)) ? ` ${(Number(box.score) * 100).toFixed(0)}%` : "";
+      const label = `${cls}${score}`;
+      const tx = rect.x + 4;
+      const ty = Math.max(14, rect.y - 6);
+      const tw = ctx.measureText(label).width + 8;
+      ctx.fillStyle = "rgba(10, 14, 22, 0.92)";
+      ctx.fillRect(tx - 3, ty - 11, tw, 14);
+      ctx.fillStyle = PALETTE.textPrimary;
+      ctx.fillText(label, tx, ty);
+    }
+  }
+
+  for (const tr of state.overlay.tracks) {
+    if (!showTracks || !Array.isArray(tr.bbox) || tr.bbox.length < 4) continue;
+    const rect = toCanvasRect(tr.bbox);
+    ctx.strokeStyle = "rgba(124, 245, 140, 0.95)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+
+    const centerX = rect.x + rect.w / 2;
+    const centerY = rect.y + rect.h / 2;
+    const trackId = String(tr.track_id ?? "?");
+    const trail = state.overlay.trackTrails.get(trackId) || [];
+    if (trail.length > 1) {
+      ctx.beginPath();
+      trail.forEach((pt, idx) => {
+        const x = Number(pt.x) * scale + offsetX;
+        const y = Number(pt.y) * scale + offsetY;
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = "rgba(124, 245, 140, 0.55)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 2.6, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(124, 245, 140, 0.95)";
+    ctx.fill();
+
+    if (showLabels) {
+      const lbl = `T${trackId}${tr.cls ? ` ${tr.cls}` : ""}`;
+      const tx = rect.x + 4;
+      const ty = rect.y + rect.h + 14;
+      ctx.fillStyle = "rgba(10, 14, 22, 0.92)";
+      ctx.fillRect(tx - 3, ty - 11, ctx.measureText(lbl).width + 8, 14);
+      ctx.fillStyle = PALETTE.textPrimary;
+      ctx.fillText(lbl, tx, ty);
+    }
+  }
+
+  if (showTracks && Array.isArray(state.overlay.trajectory) && state.overlay.trajectory.length) {
+    const points = state.overlay.trajectory
+      .map((row) => (Array.isArray(row?.point_2d) ? toCanvasPointFromNorm(row.point_2d) : null))
+      .filter(Boolean);
+    if (points.length) {
+      ctx.beginPath();
+      points.forEach((pt, idx) => {
+        if (idx === 0) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
+      });
+      ctx.strokeStyle = "rgba(247, 201, 72, 0.92)";
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+
+      for (let i = 0; i < points.length; i += 1) {
+        const pt = points[i];
+        const lbl = String(state.overlay.trajectory[i]?.label || `p${i}`);
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 3.2, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(247, 201, 72, 0.95)";
+        ctx.fill();
+        if (showLabels) {
+          ctx.fillStyle = "rgba(10, 14, 22, 0.92)";
+          ctx.fillRect(pt.x + 5, pt.y - 13, ctx.measureText(lbl).width + 8, 14);
+          ctx.fillStyle = PALETTE.textPrimary;
+          ctx.fillText(lbl, pt.x + 9, pt.y - 2);
+        }
+      }
+    }
+  }
 }
 
 function toggleVideoPlayback() {
@@ -351,6 +746,89 @@ function stepVideo(seconds = 0.25) {
   const next = dom.videoPreview.currentTime + seconds;
   dom.videoPreview.currentTime = duration > 0 ? Math.min(duration, next) : Math.max(0, next);
   pushEvent(`Stepped video by ${seconds.toFixed(2)}s`, "video");
+}
+
+async function requestVideoStageFullscreen() {
+  if (!dom.videoStage || typeof dom.videoStage.requestFullscreen !== "function") {
+    throw new Error("Fullscreen is not supported in this browser.");
+  }
+  await dom.videoStage.requestFullscreen();
+}
+
+async function exitFullscreenIfNeeded() {
+  if (document.fullscreenElement && typeof document.exitFullscreen === "function") {
+    await document.exitFullscreen();
+  }
+}
+
+function isVideoStageFullscreen() {
+  return document.fullscreenElement === dom.videoStage;
+}
+
+function syncFullscreenButton() {
+  if (!dom.timelineFullscreen) return;
+  dom.timelineFullscreen.textContent = isVideoStageFullscreen() ? "Exit Full" : "Full";
+}
+
+function toggleVideoStageFullscreen() {
+  if (isVideoStageFullscreen()) {
+    exitFullscreenIfNeeded().catch((err) => {
+      pushChat("error", `Exit fullscreen failed: ${err.message}`);
+    });
+    return;
+  }
+  if (document.fullscreenElement === dom.videoPreview) {
+    requestVideoStageFullscreen().catch((err) => {
+      pushChat("error", `Fullscreen failed: ${err.message}`);
+    });
+    return;
+  }
+  requestVideoStageFullscreen().catch((err) => {
+    pushChat("error", `Fullscreen failed: ${err.message}`);
+  });
+}
+
+async function promoteNativeVideoFullscreen() {
+  if (state.overlay.promotingFullscreen) return;
+  if (document.fullscreenElement !== dom.videoPreview) return;
+  state.overlay.promotingFullscreen = true;
+  try {
+    await requestVideoStageFullscreen();
+  } catch (_err) {
+    if (!state.overlay.fullscreenHintShown) {
+      state.overlay.fullscreenHintShown = true;
+      pushEvent("Native video fullscreen may hide overlays. Use Full for overlay fullscreen.", "video");
+    }
+  } finally {
+    state.overlay.promotingFullscreen = false;
+    syncFullscreenButton();
+    drawVideoLayers();
+  }
+}
+
+function promoteNativeVideoFullscreenFromGesture() {
+  if (document.fullscreenElement !== dom.videoPreview) return;
+  requestVideoStageFullscreen().catch(() => {});
+}
+
+function isLikelyNativeFullscreenControlHit(ev) {
+  if (!ev || !dom.videoPreview) return false;
+  const rect = dom.videoPreview.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return false;
+  const x = ev.clientX - rect.left;
+  const y = ev.clientY - rect.top;
+  const hotW = Math.max(44, rect.width * 0.06);
+  const hotH = Math.max(44, rect.height * 0.12);
+  return x >= rect.width - hotW && y >= rect.height - hotH;
+}
+
+function handleFullscreenChange() {
+  if (document.fullscreenElement === dom.videoPreview) {
+    promoteNativeVideoFullscreen().catch(() => {});
+    return;
+  }
+  syncFullscreenButton();
+  drawVideoLayers();
 }
 
 function relayoutGraph() {
@@ -672,6 +1150,7 @@ async function refreshRuns(preferredRun = null) {
 async function loadRun(runId) {
   if (!runId) return;
   state.selectedRunId = runId;
+  applyTrajectoryPoints([]);
   const [summary, graph] = await Promise.all([
     apiJSON(`/api/runs/${encodeURIComponent(runId)}`),
     apiJSON(`/api/runs/${encodeURIComponent(runId)}/graph`),
@@ -692,6 +1171,8 @@ async function loadRun(runId) {
   updateScrub(counts.frames_seen || 0);
   dom.overlayMode.textContent = summary?.config?.reasoning?.mode || "?";
   dom.overlayDevice.textContent = summary?.config?.perception?.device || "?";
+  const sampleFps = summary?.config?.ingest?.sample_fps || summary?.timing?.effective_fps || 5;
+  loadRunOverlays(runId, sampleFps).catch((err) => pushChat("error", `Overlay load failed: ${err.message}`));
 
   pushEvent(`Loaded ${runId}`, "run", `${counts.frames_seen || 0} frames`);
   const events = summary.events || [];
@@ -754,6 +1235,7 @@ async function startRun() {
   };
 
   state.activeConfig.max_frames = payload.max_frames;
+  applyTrajectoryPoints([]);
   dom.overlayMode.textContent = payload.reasoning_mode;
   dom.overlayDevice.textContent = payload.device;
   setVideoFromPath(payload.mp4_path);
@@ -794,6 +1276,7 @@ function handleRunEvent(evt) {
       vector_items: evt.vector_items ?? state.metrics.vector_items,
     });
     updateScrub(evt.frames_seen || 0);
+    updateOverlayFrame(evt);
     if ((evt.frames_seen || 0) % 15 === 0) {
       pushEvent(`Frame ${evt.frame_index} · ${evt.detections} detections`, "frame");
     }
@@ -803,6 +1286,7 @@ function handleRunEvent(evt) {
   if (evt.type === "reasoning") {
     const summary = clip(evt.summary || "(empty summary)", 220);
     pushEvent(`Reasoning ${evt.backend} · ${evt.claims} claims`, "reasoning");
+    applyTrajectoryPoints(evt.trajectory_2d_norm_0_1000);
     pushChat("reasoner", summary);
     return;
   }
@@ -978,6 +1462,9 @@ function bindUI() {
   bindButton(dom.timelineStep, () => {
     applyConsoleAction("timeline_step").catch(() => {}).finally(() => stepVideo(0.25));
   });
+  bindButton(dom.timelineFullscreen, () => {
+    toggleVideoStageFullscreen();
+  });
   bindButton(dom.pauseBtn, () => {
     applyConsoleAction("toggle_pause").catch((err) => pushChat("error", `Pause/resume failed: ${err.message}`));
   });
@@ -1007,6 +1494,39 @@ function bindUI() {
   });
 
   bindEvent(window, "resize", () => drawGraph());
+  bindEvent(window, "resize", () => drawVideoLayers());
+  bindEvent(dom.videoPreview, "loadedmetadata", () => {
+    state.overlay.sourceWidth = dom.videoPreview.videoWidth || state.overlay.sourceWidth;
+    state.overlay.sourceHeight = dom.videoPreview.videoHeight || state.overlay.sourceHeight;
+    drawVideoLayers();
+    syncHistoricalOverlayForCurrentTime();
+  });
+  bindEvent(dom.videoPreview, "seeked", () => {
+    drawVideoLayers();
+    syncHistoricalOverlayForCurrentTime();
+  });
+  bindEvent(dom.videoPreview, "pointerdown", (ev) => {
+    state.overlay.nativeFsCandidate = isLikelyNativeFullscreenControlHit(ev);
+  });
+  bindEvent(dom.videoPreview, "click", () => {
+    // Native controls are in UA shadow DOM; click often retargets to <video>.
+    // If click is likely on native fullscreen control, route to stage fullscreen directly.
+    if (state.overlay.nativeFsCandidate) {
+      state.overlay.nativeFsCandidate = false;
+      toggleVideoStageFullscreen();
+      return;
+    }
+    state.overlay.nativeFsCandidate = false;
+    setTimeout(() => promoteNativeVideoFullscreenFromGesture(), 0);
+  });
+  bindEvent(dom.videoPreview, "dblclick", (ev) => {
+    ev.preventDefault();
+    toggleVideoStageFullscreen();
+  });
+  bindEvent(dom.videoPreview, "timeupdate", () => syncHistoricalOverlayForCurrentTime());
+  bindEvent(dom.videoPreview, "play", () => syncHistoricalOverlayForCurrentTime());
+  bindEvent(document, "fullscreenchange", () => handleFullscreenChange());
+  syncFullscreenButton();
   installGraphInteractions();
 }
 
