@@ -376,7 +376,7 @@ function updateScrub(framesSeen = 0) {
 
 function setVideoFromPath(path) {
   const p = String(path || "").trim();
-  if (!p || !p.endsWith(".mp4")) {
+  if (!p || !/\.mp4$/i.test(p)) {
     dom.videoPreview.removeAttribute("src");
     dom.videoPreview.load();
     dom.videoStage.classList.remove("has-video");
@@ -387,6 +387,69 @@ function setVideoFromPath(path) {
   dom.videoPreview.src = `/media/${encodeURIComponent(filename)}`;
   dom.videoStage.classList.add("has-video");
   clearVideoLayers();
+}
+
+function videoFilenameFromPath(path) {
+  const p = String(path || "").trim();
+  if (!p || !/\.mp4$/i.test(p)) return null;
+  const filename = p.split("/").pop();
+  return filename || null;
+}
+
+async function mediaPathExists(path) {
+  const filename = videoFilenameFromPath(path);
+  if (!filename) return false;
+  try {
+    const res = await fetch(`/media/${encodeURIComponent(filename)}`, { method: "HEAD" });
+    return Boolean(res.ok);
+  } catch (_err) {
+    return false;
+  }
+}
+
+function collectRunVideoCandidates(runId, summary) {
+  const candidates = [
+    summary?.input_mp4_path,
+    summary?.mp4_path,
+    summary?.input?.mp4_path,
+    summary?.config?.input?.mp4_path,
+    summary?.config?.ingest?.mp4_path,
+    summary?.config?.mp4_path,
+  ];
+
+  const rid = String(runId || "");
+  if (rid.startsWith("out_")) {
+    const stem = rid.slice(4);
+    if (stem && !stem.startsWith("web_")) {
+      candidates.push(`data/scratch/${stem}.mp4`);
+      const firstToken = stem.split("_")[0];
+      if (firstToken && firstToken !== stem) {
+        candidates.push(`data/scratch/${firstToken}.mp4`);
+      }
+    }
+  }
+
+  const out = [];
+  const seen = new Set();
+  for (const row of candidates) {
+    const p = String(row || "").trim();
+    if (!/\.mp4$/i.test(p)) continue;
+    if (seen.has(p)) continue;
+    seen.add(p);
+    out.push(p);
+  }
+  return out;
+}
+
+async function resolveRunVideoPath(runId, summary) {
+  const candidates = collectRunVideoCandidates(runId, summary);
+  if (!candidates.length) return null;
+  let fallback = null;
+  for (const candidate of candidates) {
+    if (fallback === null) fallback = candidate;
+    if (await mediaPathExists(candidate)) return candidate;
+  }
+  return fallback;
 }
 
 function clearVideoLayers() {
@@ -1155,6 +1218,12 @@ async function loadRun(runId) {
     apiJSON(`/api/runs/${encodeURIComponent(runId)}`),
     apiJSON(`/api/runs/${encodeURIComponent(runId)}/graph`),
   ]);
+
+  const videoPath = await resolveRunVideoPath(runId, summary);
+  if (videoPath) {
+    dom.mp4PathInput.value = videoPath;
+    setVideoFromPath(videoPath);
+  }
 
   state.graph.nodes = graph.nodes || [];
   state.graph.edges = graph.edges || [];

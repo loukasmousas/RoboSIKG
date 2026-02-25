@@ -496,7 +496,7 @@ class Orchestrator:
                     "tracks": [
                         {
                             "track_id": int(tr.track_id),
-                            "bbox": [float(x) for x in tr.bbox_xyxy],
+                            "bbox": [float(x) for x in tr.bbox()],
                             "cls": tr.cls,
                         }
                         for tr in confirmed
@@ -646,6 +646,7 @@ class Orchestrator:
         elapsed_s = max(0.0, time.perf_counter() - t_start)
         summary = {
             "source_id": self.source.source_id,
+            "input_mp4_path": mp4_path,
             "config": asdict(self.cfg),
             "reasoning_backend": self._final_reasoning_backend(),
             "reasoning_fallbacks": self.reasoning_fallbacks,

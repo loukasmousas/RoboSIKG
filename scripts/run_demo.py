@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from robosikg.agent.orchestrator import Orchestrator
     from robosikg.config import DemoConfig
 
-DEFAULT_NIM_BASE_URL = os.getenv("ROBOSIKG_NIM_BASE_URL", "http://160.211.46.122:8000/v1")
+DEFAULT_NIM_BASE_URL = os.getenv("ROBOSIKG_NIM_BASE_URL", "http://160.211.47.58:8000/v1")
 DEFAULT_MODEL_NAME = os.getenv("ROBOSIKG_MODEL_NAME", "nvidia/cosmos-reason2-8b")
 
 

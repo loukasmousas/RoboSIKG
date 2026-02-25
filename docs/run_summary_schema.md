@@ -3,6 +3,7 @@
 Top-level fields:
 
 - `source_id` (`string`): deterministic source identifier from CLI.
+- `input_mp4_path` (`string`): MP4 path used as input for the run.
 - `config` (`object`): resolved runtime config used for the run.
 - `reasoning_backend` (`string`): final backend used (`nim`, `mock`, or `mock(auto-fallback)`).
 - `reasoning_fallbacks` (`integer`): count of fallback transitions from NIM to mock in auto mode.
