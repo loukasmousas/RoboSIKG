@@ -55,3 +55,5 @@ cover/
 # Workbench Project Layout
 data/scratch/*
 !data/scratch/.gitkeep
+!data/scratch/traffic.mp4
+!data/scratch/balloons.mp4
