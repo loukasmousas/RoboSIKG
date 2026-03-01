@@ -23,8 +23,8 @@ layout:
 environment:
     base:
         registry: nvcr.io
-        image: nvidia/ai-workbench/python-cuda128:1.0.2
-        build_timestamp: "20250725180751"
+        image: nvidia/ai-workbench/python-cuda128:1.0.3
+        build_timestamp: "20260112181943"
         name: Python with CUDA 12.8
         supported_architectures: []
         cuda_version: "12.8"
@@ -52,7 +52,7 @@ environment:
         programming_languages:
             - python3
         icon_url: https://workbench.download.nvidia.com/static/img/ai-workbench-icon-rectangle.jpg
-        image_version: 1.0.2
+        image_version: 1.0.3
         os: linux
         os_distro: ubuntu
         os_distro_release: "22.04"
@@ -76,7 +76,7 @@ environment:
             - name: pip
               binary_path: /usr/bin/pip
               installed_packages:
-                - jupyterlab==4.3.5
+                - jupyterlab==4.3.6
         package_manager_environment:
             name: ""
             target: ""
