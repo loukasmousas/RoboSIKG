@@ -33,6 +33,8 @@ robosikg/web/
 compose.yaml
 docs/
   run_summary_schema.md
+  web_console_controls.md
+  sparql_query_playbook.md
   cookoff_checklist.md
 ```
 
@@ -59,10 +61,37 @@ python3 -m pytest -q
 python3 scripts/run_demo.py \
   --mp4 data/scratch/input.mp4 \
   --out out_demo \
-  --source-id demo_video \
+  --source-id auto \
   --reasoning-mode auto \
   --device cuda \
   --pretrained
+```
+
+`--source-id auto` derives a deterministic source id from the MP4 filename and avoids accidental source-id reuse across datasets.
+
+### 3b) Reproduce with bundled demo videos
+
+The repository includes two sample inputs under `data/scratch/` (tracked via Git LFS):
+- `traffic.mp4`
+- `balloons.mp4`
+
+Example:
+
+```bash
+python3 scripts/run_demo.py \
+  --mp4 data/scratch/traffic.mp4 \
+  --out out_traffic \
+  --source-id auto \
+  --reasoning-mode nim \
+  --sample-fps 5 \
+  --reason-every-n-frames 8 \
+  --score-thresh 0.50 \
+  --max-frames 600 \
+  --device cuda \
+  --pretrained \
+  --reasoning-debug \
+  --nim-base-url http://160.211.47.74:8000/v1 \
+  --model-name nvidia/cosmos-reason2-8b
 ```
 
 Key flags:
@@ -105,7 +134,7 @@ The compose profile exposes:
 - `http://127.0.0.1:8000/v1/chat/completions`
 
 Default NIM endpoint used by demo:
-- `http://160.211.46.122:8000/v1/chat/completions`
+- `http://160.211.47.74:8000/v1`
 
 Default model used by demo:
 - `nvidia/cosmos-reason2-8b`
@@ -116,6 +145,7 @@ Optional overrides:
 
 In `--reasoning-mode auto`, the orchestrator attempts NIM first and switches to mock reasoner if NIM fails.
 If NIM returns zero claims, the orchestrator adds bounded deterministic fallback claims from geometry (`near`/`inside`/`overlaps`) and ANN retrieval neighbors.
+If NIM returns claims, the orchestrator can add a small number of confidence-capped consultant claims from geometry/ANN for better graph coverage, while preserving claim-source provenance.
 If NIM omits trajectory points, the orchestrator adds a bounded deterministic 2D trajectory fallback from tracker motion context.
 
 ## Ops Console
@@ -130,6 +160,8 @@ The web console is a dark-glass cockpit UI with:
 - operator console state/actions (`/api/console/state`, `/api/console/action`)
 - run export bundles (`/api/runs/{id}/export`)
 - SPARQL query execution for selected run (`/api/sparql/query`)
+- SPARQL focus sync across graph/chat/video with clear action
+- live performance profile panel (detector/embedding/reasoning/io)
 
 Notes:
 - uploaded MP4 files are saved under `data/scratch/`
@@ -146,6 +178,9 @@ Notes:
 
 Button-by-button console guide:
 - `docs/web_console_controls.md`
+
+SPARQL examples for presentation and analysis:
+- `docs/sparql_query_playbook.md`
 
 ## Reproducibility Notes
 

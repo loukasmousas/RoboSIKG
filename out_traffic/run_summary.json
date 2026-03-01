@@ -7,8 +7,8 @@
   },
   "config": {
     "ingest": {
-      "max_frames": 500,
-      "sample_fps": 4.0,
+      "max_frames": 600,
+      "sample_fps": 5.0,
       "timestamp_origin_ns": 0
     },
     "kg": {
@@ -26,8 +26,8 @@
       "debug_capture": true,
       "mode": "nim",
       "model_name": "nvidia/cosmos-reason2-8b",
-      "nim_base_url": "http://160.211.47.58:8000/v1",
-      "reason_every_n_frames": 5,
+      "nim_base_url": "http://160.211.47.74:8000/v1",
+      "reason_every_n_frames": 8,
       "timeout_s": 60.0
     },
     "tracking": {
@@ -45,65 +45,73 @@
     }
   },
   "counts": {
-    "events_total": 47,
-    "frames_seen": 50,
-    "kg_triples": 10160,
-    "reasoning_avg_claims_per_invocation": 3.7,
-    "reasoning_claims_total": 37,
-    "reasoning_debug_entries": 10,
-    "reasoning_deterministic_fallback_claims_total": 37,
-    "reasoning_deterministic_fallback_invocations": 10,
-    "reasoning_invocations": 10,
-    "reasoning_invocations_with_claims": 10,
+    "events_total": 40,
+    "frames_seen": 67,
+    "kg_triples": 13297,
+    "reasoning_avg_claims_per_invocation": 4.0,
+    "reasoning_claims_total": 32,
+    "reasoning_consultant_claims_total": 0,
+    "reasoning_consultant_fusion_invocations": 0,
+    "reasoning_debug_entries": 8,
+    "reasoning_deterministic_fallback_claims_total": 32,
+    "reasoning_deterministic_fallback_invocations": 8,
+    "reasoning_invocations": 8,
+    "reasoning_invocations_with_claims": 8,
     "reasoning_model_claims_total": 0,
     "reasoning_zero_claim_invocations": 0,
-    "regions_added": 1176,
+    "regions_added": 1563,
     "stopped_early": false,
-    "tracks_seen": 102,
-    "trajectory_points_total": 50,
-    "vector_items": 1176
+    "tracks_seen": 103,
+    "trajectory_points_total": 40,
+    "vector_items": 1563
   },
   "errors": [],
   "events": [
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7295686960220338,
-      "edge": "urn:sha256:ee283f2a54ae92356ddc32515170d748b56678495347e9b81f6d36f4e8718681",
+      "confidence": 0.7318616390228272,
+      "edge": "urn:sha256:aeb396b9fcbceaf35804283ddb64d5b9c9b6bc8f3f7230734add3fc41936e8bc",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7115792870521546,
-      "edge": "urn:sha256:8060afd803d241085e4d1c30107383c530634c1af73ca53f71b4e545400f83fa",
+      "confidence": 0.7289042472839355,
+      "edge": "urn:sha256:a3a066667bd81740cddb353b1cdee14ece2250110051a0dca770099130d3ff08",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7095545053482056,
-      "edge": "urn:sha256:2367bdc8eeb3c416321ecca227b6deef768f07fc41058d1b6387238df89ba11e",
+      "confidence": 0.7244419813156129,
+      "edge": "urn:sha256:35e2fd3a0295e4dc49903d601791a250e475146e01aa2f9dd2cae449e5a448dd",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7076025247573853,
-      "edge": "urn:sha256:57402dec94eab059cdb4ffe0c64dbf220649a01ff46a9f2aa1cc6b12c78a74d6",
+      "confidence": 0.7187443375587463,
+      "edge": "urn:sha256:99aeac5ce5c444b4327e0aadd5bd67950430735b15ff31e72a06f371f96bbac7",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
+      "claim_breakdown": {
+        "retrieval_fallback": 4
+      },
       "claim_source": "retrieval_fallback",
+      "claim_sources": [
+        "retrieval_fallback"
+      ],
       "claims": 4,
-      "frame": "urn:sha256:a7b6f35515201a828d4f9270c49971dd433cdf6420497d7bb305aeef8ee423dc",
+      "frame": "urn:sha256:3a1b13ea13317298622823cfb806056fa52e1f5cb1db13c8601017a33a075aab",
       "no_claim_reason": "no_structured_payload",
-      "summary": "{\n  \"summary\": \"The scene captures multiple cars moving across the frame with varying speeds and directions, alongside a bus and a train visible in the background. The vehicles exhibit distinct motion patterns, with some traveling horizontally while others move diagonally or vertically within the frame.\",\n  \"claims\": [\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3204b51689882d83a9701b80b46759dc066a21f7fe0d30824398af4fd18b9edd\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[65.83058166503906, -11.070586204528809]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:1671f5eb82902d66737b2bbdf38089a7ccb0b600dc3203a2c6f3a091a1366c11\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-36.30755615234375, 39.35498046875]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:748b947cb073330d235ea1f907fc2208b04c8455f2014d164f25130b44718f8c\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[14.040932655334473, -4.045692443847656]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:ce5646fb9600c4e55a19857aaf13b392028a99bc1af6f7ae05a069e031486fed\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-41.15462875366211, 20.264795303344727]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:51a1f7ecd8ac3a69050f07ba6d35bd314c502720838fe4d30dcbc86be7d0aa00\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-15.1386137008667, 13.89841365814209]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:97c76dee675f2697bbd038dff3e0ab9e22c632d3e287abd08a1dcaa67d800b09\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[13.046204566955566, 4.288726329803467]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:e7801f6b8422e8cffb74f6824f1a0c0681ec0301d86744eb240491fdfd94e0f6\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[17.17917251586914, 4.913705825805664]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:9ed0565c38755fa2f26ec89e76fc8a567b5304c191a77acca9be77396cf4e74a\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[2.1093006134033203, 12.006122589111328]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:db5ac1d934fa21b4c69766c48315392d42ff0cd81efd7e509e50f1950bfcf5f4\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[16.26058578491211, 7.29509162902832]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:62aa25454d3ef5d6085f185e7581ef1e1c1351aba029f9595b420c4b6560d32d\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[6.287909984588623, 4.1908860206604]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:6c1d4b1e31ecf09629dddf31005737b542b3f550520cf4bbfd50785ecc7db936\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-11.052895545959473, 9.635193824768066]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:92e911daaef3c0ac92d69966d27195a90b2916a4d916a6257f4d71af04062d17\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[11.465774536132812, 2.975757598876953]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:28f63",
+      "summary": "{\n  \"summary\": \"The scene captures multiple cars moving across the frame with varying speeds and directions, while a bus is also visible but stationary. The vehicles exhibit diverse motion patterns, including some traveling horizontally and others diagonally, suggesting a dynamic traffic environment.\",\n  \"claims\": [\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:a02fb1b6806b16e7d0e6103b1024e446710d8985d30f962e6fe179a5ba608804\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[54.38015365600586, -7.267167091369629]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:febf3e64c19f1879d4419a8de33a74d0853b553d9e16b783abd9620d3a3df146\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-28.092336654663086, 31.4528751373291]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:a84b25faf29f6270fd996c10cf37b7a787a1f45c0d20dd32ece53c3d6db2c9ee\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[10.233222007751465, -3.5697288513183594]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:64a2b2fd1ddf714d0f37ccba42a6055ce4c6ce70e126068648d58a1a98cee1b9\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-31.356916427612305, 15.65003490447998]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:fef1787c8dbeaa3fc87e53544b754612359b82efab198121a27312652895b75b\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-11.181168556213379, 11.14157772064209]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3ba6913c14a9ce5e54dbf81798b8f0ee70ffbec3bb4104798971a94ab7b1a62a\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[13.628900527954102, 4.232869625091553]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3b440c560a77376972b1bd1092f1516e8a47d7fc1f55d9c8073a1947284de62a\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[1.903855323791504, -1.903855323791504]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:1537bc86ff65a97d5d4313f823180df84ec6a05b225781511e6b337b6e72ce3b\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-1.1245849132537842, 8.418169975280762]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:608e652d96cf2560de639e75ef5979e984e581e4d16c96e0997ffcdbd444b40b\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[11.771600723266602, 6.6631340980529785]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:401c3048d5d4da13fee75c4d71173ac216ee7635518bee57871e3aafd7c27b3a\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[4.292421817779541, 3.465841293334961]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:e1fd1ddfb4396d25fe914ffdeadd9751833648aadf17e62479f564c522e51fae\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-9.21491813659668, 7.914666175842285]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:f0aa4d92571d6eac31df85563461830b51dc8decc0ac92fae4610e22fddc6ed5\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[8.806251525878906, 1.892769694328308]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
@@ -111,42 +119,48 @@
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7216777563095094,
-      "edge": "urn:sha256:e736e686043755c07e02753bb0bf3f03779b380434fbf20744b207a765e3a9b1",
+      "confidence": 0.7301616907119751,
+      "edge": "urn:sha256:61a748f46c2eefec0c2979c48f4dd1d2c6442d88f54e7e5c14eadd76dbde0123",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7135094404220581,
-      "edge": "urn:sha256:b58f27ffa921e00dfd0336b6f3b1550575e18e9d8e06c45acd9ae26e634c0c8d",
+      "confidence": 0.7288138747215271,
+      "edge": "urn:sha256:2288450dd58086a1725128da6446dadf76c92cc9828d8c987c8db156b8f13d05",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7101582765579224,
-      "edge": "urn:sha256:9f21a8cb7211a8c7da489673f4d2f01f1909c6813bfa66a20dac22ab5c2555ab",
+      "confidence": 0.7240619897842407,
+      "edge": "urn:sha256:f6021f856a9e4a8691d7261e7abab9c21252c7562a0fae5ee40d16c84632a290",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7092638731002808,
-      "edge": "urn:sha256:5952b198cc81cf116eab090fc5c0a8dbb426ca7f4fea8bd6042826002e5fc6b5",
+      "confidence": 0.7234562516212464,
+      "edge": "urn:sha256:153bca7570111eabcc795be7aaf9c7ee4481076f430146224293cb9308844a0c",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
+      "claim_breakdown": {
+        "retrieval_fallback": 4
+      },
       "claim_source": "retrieval_fallback",
+      "claim_sources": [
+        "retrieval_fallback"
+      ],
       "claims": 4,
-      "frame": "urn:sha256:d0ee6034203fca8d7c4d544562f46ed33ef71df1d8d08ae28c82c5beb5ed9016",
+      "frame": "urn:sha256:d5b91668115f3b4f11119a92adec455472bf0869a44d88a1a64f86558cc22cd3",
       "no_claim_reason": "no_structured_payload",
-      "summary": "{\n  \"summary\": \"The scene depicts multiple cars moving across the frame with varying speeds and directions, alongside a bus and a train in the background. Vehicles exhibit diverse motion patterns, including horizontal, diagonal, and vertical movements within the frame.\",\n  \"claims\": [\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3204b51689882d83a9701b80b46759dc066a21f7fe0d30824398af4fd18b9edd\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[65.83058166503906, -11.070586204528809]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:1671f5eb82902d66737b2bbdf38089a7ccb0b600dc3203a2c6f3a091a1366c11\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-36.30755615234375, 39.35498046875]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:748b947cb073330d235ea1f907fc2208b04c8455f2014d164f25130b44718f8c\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[14.040932655334473, -4.045692443847656]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:ce5646fb9600c4e55a19857aaf13b392028a99bc1af6f7ae05a069e031486fed\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-41.15462875366211, 20.264795303344727]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:51a1f7ecd8ac3a69050f07ba6d35bd314c502720838fe4d30dcbc86be7d0aa00\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-15.1386137008667, 13.89841365814209]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:97c76dee675f2697bbd038dff3e0ab9e22c632d3e287abd08a1dcaa67d800b09\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[13.046204566955566, 4.288726329803467]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:e7801f6b8422e8cffb74f6824f1a0c0681ec0301d86744eb240491fdfd94e0f6\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[17.17917251586914, 4.913705825805664]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:9ed0565c38755fa2f26ec89e76fc8a567b5304c191a77acca9be77396cf4e74a\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[2.1093006134033203, 12.006122589111328]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:db5ac1d934fa21b4c69766c48315392d42ff0cd81efd7e509e50f1950bfcf5f4\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[16.26058578491211, 7.29509162902832]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:62aa25454d3ef5d6085f185e7581ef1e1c1351aba029f9595b420c4b6560d32d\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[6.287909984588623, 4.1908860206604]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:6c1d4b1e31ecf09629dddf31005737b542b3f550520cf4bbfd50785ecc7db936\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-11.052895545959473, 9.635193824768066]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:92e911daaef3c0ac92d69966d27195a90b2916a4d916a6257f4d71af04062d17\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[11.465774536132812, 2.975757598876953]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:28f63e05a6",
+      "summary": "{\n  \"summary\": \"The scene depicts multiple cars moving across the frame with varying speeds and directions, while a bus remains stationary. Vehicles exhibit diverse motion patterns, including horizontal and diagonal trajectories, indicating a dynamic traffic environment.\",\n  \"claims\": [\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:a02fb1b6806b16e7d0e6103b1024e446710d8985d30f962e6fe179a5ba608804\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[54.38015365600586, -7.267167091369629]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:febf3e64c19f1879d4419a8de33a74d0853b553d9e16b783abd9620d3a3df146\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-28.092336654663086, 31.4528751373291]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:a84b25faf29f6270fd996c10cf37b7a787a1f45c0d20dd32ece53c3d6db2c9ee\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[10.233222007751465, -3.5697288513183594]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:64a2b2fd1ddf714d0f37ccba42a6055ce4c6ce70e126068648d58a1a98cee1b9\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-31.356916427612305, 15.65003490447998]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:fef1787c8dbeaa3fc87e53544b754612359b82efab198121a27312652895b75b\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-11.181168556213379, 11.14157772064209]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3ba6913c14a9ce5e54dbf81798b8f0ee70ffbec3bb4104798971a94ab7b1a62a\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[13.628900527954102, 4.232869625091553]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3b440c560a77376972b1bd1092f1516e8a47d7fc1f55d9c8073a1947284de62a\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[1.903855323791504, -1.903855323791504]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:1537bc86ff65a97d5d4313f823180df84ec6a05b225781511e6b337b6e72ce3b\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-1.1245849132537842, 8.418169975280762]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:608e652d96cf2560de639e75ef5979e984e581e4d16c96e0997ffcdbd444b40b\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[11.771600723266602, 6.6631340980529785]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:401c3048d5d4da13fee75c4d71173ac216ee7635518bee57871e3aafd7c27b3a\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[4.292421817779541, 3.465841293334961]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:e1fd1ddfb4396d25fe914ffdeadd9751833648aadf17e62479f564c522e51fae\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-9.21491813659668, 7.914666175842285]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:f0aa4d92571d6eac31df85563461830b51dc8decc0ac92fae4610e22fddc6ed5\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[8.806251525878906, 1.892769694328308]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:f8f5",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
@@ -154,42 +168,48 @@
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7292155742645264,
-      "edge": "urn:sha256:d806f09dbfab88a5991eeb77d08f8d15333f12877381061104c10b27c8cb20e4",
+      "confidence": 0.7390544891357422,
+      "edge": "urn:sha256:475654093f2ddc970ee0fe35e59611d8cc33a83edbeb2c4370234cae501690a7",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.720916783809662,
-      "edge": "urn:sha256:07c495f00280023b879511ed3232b3ddeda21bc7ac85f0154177a04ab4c1e4e2",
+      "confidence": 0.7379013299942017,
+      "edge": "urn:sha256:47bb9107cbe309682177bf563cc2cacb16770dabd019a2a322f2ac7a8a08c1e6",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7196660280227661,
-      "edge": "urn:sha256:7163e8c9b80ac5e55c9133f1fe225e84b4eb2acff312cf62346a389c25df3efc",
+      "confidence": 0.7376417398452759,
+      "edge": "urn:sha256:c324cb87d6b5cfdaad645abe99c74fa1c1fa7562cf0f2323da7fac9683a58c5c",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7137678742408753,
-      "edge": "urn:sha256:b22a978741b07227a2cb79a455b051b3ab602efcf9a38b675f55ad6dc66bb201",
+      "confidence": 0.7369792222976685,
+      "edge": "urn:sha256:1265e5d84f59e24b9af1058ac4683911200a67dc6b900ea927ba275f46d7dffa",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
+      "claim_breakdown": {
+        "retrieval_fallback": 4
+      },
       "claim_source": "retrieval_fallback",
+      "claim_sources": [
+        "retrieval_fallback"
+      ],
       "claims": 4,
-      "frame": "urn:sha256:9c28719d09493ea61835db09589a9b009a02a1c6f510fcdafbbf29757b345a88",
+      "frame": "urn:sha256:dde5fb3b3d9fe79f08e37ccf59d4a5322282d193bcf61bbec7a8be0d1973b7b8",
       "no_claim_reason": "no_structured_payload",
-      "summary": "{\n  \"summary\": \"The scene shows multiple cars moving across the frame with varying speeds and directions, alongside a bus and a train in the background. Vehicles exhibit diverse motion patterns, including horizontal, diagonal, and vertical movements within the frame.\",\n  \"claims\": [\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3204b51689882d83a9701b80b46759dc066a21f7fe0d30824398af4fd18b9edd\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[65.83058166503906, -11.070586204528809]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:1671f5eb82902d66737b2bbdf38089a7ccb0b600dc3203a2c6f3a091a1366c11\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-36.30755615234375, 39.35498046875]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:748b947cb073330d235ea1f907fc2208b04c8455f2014d164f25130b44718f8c\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[14.040932655334473, -4.045692443847656]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:ce5646fb9600c4e55a19857aaf13b392028a99bc1af6f7ae05a069e031486fed\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-41.15462875366211, 20.264795303344727]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:51a1f7ecd8ac3a69050f07ba6d35bd314c502720838fe4d30dcbc86be7d0aa00\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-15.1386137008667, 13.89841365814209]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:97c76dee675f2697bbd038dff3e0ab9e22c632d3e287abd08a1dcaa67d800b09\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[13.046204566955566, 4.288726329803467]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:e7801f6b8422e8cffb74f6824f1a0c0681ec0301d86744eb240491fdfd94e0f6\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[17.17917251586914, 4.913705825805664]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:9ed0565c38755fa2f26ec89e76fc8a567b5304c191a77acca9be77396cf4e74a\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[2.1093006134033203, 12.006122589111328]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:db5ac1d934fa21b4c69766c48315392d42ff0cd81efd7e509e50f1950bfcf5f4\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[16.26058578491211, 7.29509162902832]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:62aa25454d3ef5d6085f185e7581ef1e1c1351aba029f9595b420c4b6560d32d\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[6.287909984588623, 4.1908860206604]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:6c1d4b1e31ecf09629dddf31005737b542b3f550520cf4bbfd50785ecc7db936\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-11.052895545959473, 9.635193824768066]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:92e911daaef3c0ac92d69966d27195a90b2916a4d916a6257f4d71af04062d17\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[11.465774536132812, 2.975757598876953]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:28f63e05a6",
+      "summary": "{\n  \"summary\": \"The scene features multiple cars moving across the frame with varying speeds and directions, alongside a stationary bus. Vehicles display diverse motion patterns, including horizontal and diagonal trajectories, indicating a dynamic traffic scenario.\",\n  \"claims\": [\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:a02fb1b6806b16e7d0e6103b1024e446710d8985d30f962e6fe179a5ba608804\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[54.38015365600586, -7.267167091369629]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:febf3e64c19f1879d4419a8de33a74d0853b553d9e16b783abd9620d3a3df146\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-28.092336654663086, 31.4528751373291]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:a84b25faf29f6270fd996c10cf37b7a787a1f45c0d20dd32ece53c3d6db2c9ee\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[10.233222007751465, -3.5697288513183594]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:64a2b2fd1ddf714d0f37ccba42a6055ce4c6ce70e126068648d58a1a98cee1b9\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-31.356916427612305, 15.65003490447998]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:fef1787c8dbeaa3fc87e53544b754612359b82efab198121a27312652895b75b\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-11.181168556213379, 11.14157772064209]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3ba6913c14a9ce5e54dbf81798b8f0ee70ffbec3bb4104798971a94ab7b1a62a\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[13.628900527954102, 4.232869625091553]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3b440c560a77376972b1bd1092f1516e8a47d7fc1f55d9c8073a1947284de62a\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[1.903855323791504, -1.903855323791504]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:1537bc86ff65a97d5d4313f823180df84ec6a05b225781511e6b337b6e72ce3b\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-1.1245849132537842, 8.418169975280762]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:608e652d96cf2560de639e75ef5979e984e581e4d16c96e0997ffcdbd444b40b\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[11.771600723266602, 6.6631340980529785]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:401c3048d5d4da13fee75c4d71173ac216ee7635518bee57871e3aafd7c27b3a\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[4.292421817779541, 3.465841293334961]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:e1fd1ddfb4396d25fe914ffdeadd9751833648aadf17e62479f564c522e51fae\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-9.21491813659668, 7.914666175842285]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:f0aa4d92571d6eac31df85563461830b51dc8decc0ac92fae4610e22fddc6ed5\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[8.806251525878906, 1.892769694328308]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:f8f53",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
@@ -197,61 +217,48 @@
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.725822913646698,
-      "edge": "urn:sha256:9424525dc638930ceedb295019afb37412332925676e95c573e8d486f0be7124",
+      "confidence": 0.721144437789917,
+      "edge": "urn:sha256:768b3ae4fb086966f98dd6a33dc2dbd0f3d7d1f5f4b753d086a83b4ad60e1369",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7251348972320557,
-      "edge": "urn:sha256:9a5c84c756bff8adc4883342d74946748aa68c19effc9cb122195b48c57e2dfa",
+      "confidence": 0.7199724912643433,
+      "edge": "urn:sha256:3d794d205b4fb7b80e0e80388d8cbf590dbe7af287bfc864f325cc13189e727b",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7231942892074585,
-      "edge": "urn:sha256:9dfe58dc47de31d1ef3889d320952ca28d2c3d0c08b0f3a17cd50e18f7536da4",
+      "confidence": 0.7196112990379334,
+      "edge": "urn:sha256:9c10f0b36ad6748d97e2c9e0e9ce1271b183911cefaf2925a22c1930ec47f975",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7230607986450196,
-      "edge": "urn:sha256:fd2a52dcbb7350df39710564ef430f757c5d4cfc4ad2d6de51da3763fb53b5fd",
+      "confidence": 0.7179075241088868,
+      "edge": "urn:sha256:c433f28e3b5774b49af22ac59e7ee158ecfaade6c1b8f18892fa06a2a437cfbd",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
+      "claim_breakdown": {
+        "retrieval_fallback": 4
+      },
       "claim_source": "retrieval_fallback",
+      "claim_sources": [
+        "retrieval_fallback"
+      ],
       "claims": 4,
-      "frame": "urn:sha256:6ab78c1c69bf78ce4f75c99045e8511fb56dc116f7f8684f6069517b7924ca10",
+      "frame": "urn:sha256:912d438813c84bc4c65d2387566948597da50cec8a0f7ad6d88d69925b7b1a8a",
       "no_claim_reason": "no_structured_payload",
-      "summary": "{\n  \"summary\": \"The scene captures multiple cars moving across the frame with varying speeds and directions, alongside a bus and a train in the background. Vehicles exhibit distinct motion patterns, with some traveling horizontally while others move diagonally or vertically within the frame.\",\n  \"claims\": [\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3204b51689882d83a9701b80b46759dc066a21f7fe0d30824398af4fd18b9edd\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[65.83058166503906, -11.070586204528809]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:1671f5eb82902d66737b2bbdf38089a7ccb0b600dc3203a2c6f3a091a1366c11\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-36.30755615234375, 39.35498046875]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:748b947cb073330d235ea1f907fc2208b04c8455f2014d164f25130b44718f8c\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[14.040932655334473, -4.045692443847656]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:ce5646fb9600c4e55a19857aaf13b392028a99bc1af6f7ae05a069e031486fed\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-41.15462875366211, 20.264795303344727]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:51a1f7ecd8ac3a69050f07ba6d35bd314c502720838fe4d30dcbc86be7d0aa00\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-15.1386137008667, 13.89841365814209]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:97c76dee675f2697bbd038dff3e0ab9e22c632d3e287abd08a1dcaa67d800b09\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[13.046204566955566, 4.288726329803467]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:e7801f6b8422e8cffb74f6824f1a0c0681ec0301d86744eb240491fdfd94e0f6\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[17.17917251586914, 4.913705825805664]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:9ed0565c38755fa2f26ec89e76fc8a567b5304c191a77acca9be77396cf4e74a\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[2.1093006134033203, 12.006122589111328]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:db5ac1d934fa21b4c69766c48315392d42ff0cd81efd7e509e50f1950bfcf5f4\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[16.26058578491211, 7.29509162902832]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:62aa25454d3ef5d6085f185e7581ef1e1c1351aba029f9595b420c4b6560d32d\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[6.287909984588623, 4.1908860206604]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:6c1d4b1e31ecf09629dddf31005737b542b3f550520cf4bbfd50785ecc7db936\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-11.052895545959473, 9.635193824768066]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:92e911daaef3c0ac92d69966d27195a90b2916a4d916a6257f4d71af04062d17\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[11.465774536132812, 2.975757598876953]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:28f63e0",
-      "trajectory_points": 5,
-      "trajectory_source": "track_motion_fallback",
-      "type": "reasoning_summary"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "geometric_fallback",
-      "confidence": 0.9,
-      "edge": "urn:sha256:b297c67c5c24fc52302b96d9baeb69ccf92342d1030b45152a4cf2bee5728720",
-      "summary": "geometry_inside",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "geometric_fallback",
-      "claims": 1,
-      "frame": "urn:sha256:705da5aa813acb1fe1f9f9e23bbfe6bc1680b75ceb25c74cf572f7352acaec1a",
-      "no_claim_reason": "no_structured_payload",
-      "summary": "{\n  \"summary\": \"The scene captures multiple cars moving across the frame with varying speeds and directions, alongside a bus and a train in the background. Vehicles exhibit distinct motion patterns, with some traveling horizontally while others move diagonally or vertically within the frame.\",\n  \"claims\": [\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3204b51689882d83a9701b80b46759dc066a21f7fe0d30824398af4fd18b9edd\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[65.83058166503906, -11.070586204528809]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:1671f5eb82902d66737b2bbdf38089a7ccb0b600dc3203a2c6f3a091a1366c11\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-36.30755615234375, 39.35498046875]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:748b947cb073330d235ea1f907fc2208b04c8455f2014d164f25130b44718f8c\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[14.040932655334473, -4.045692443847656]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:ce5646fb9600c4e55a19857aaf13b392028a99bc1af6f7ae05a069e031486fed\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-41.15462875366211, 20.264795303344727]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:51a1f7ecd8ac3a69050f07ba6d35bd314c502720838fe4d30dcbc86be7d0aa00\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-15.1386137008667, 13.89841365814209]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:97c76dee675f2697bbd038dff3e0ab9e22c632d3e287abd08a1dcaa67d800b09\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[13.046204566955566, 4.288726329803467]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:e7801f6b8422e8cffb74f6824f1a0c0681ec0301d86744eb240491fdfd94e0f6\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[17.17917251586914, 4.913705825805664]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:9ed0565c38755fa2f26ec89e76fc8a567b5304c191a77acca9be77396cf4e74a\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[2.1093006134033203, 12.006122589111328]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:db5ac1d934fa21b4c69766c48315392d42ff0cd81efd7e509e50f1950bfcf5f4\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[16.26058578491211, 7.29509162902832]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:62aa25454d3ef5d6085f185e7581ef1e1c1351aba029f9595b420c4b6560d32d\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[6.287909984588623, 4.1908860206604]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:6c1d4b1e31ecf09629dddf31005737b542b3f550520cf4bbfd50785ecc7db936\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-11.052895545959473, 9.635193824768066]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:92e911daaef3c0ac92d69966d27195a90b2916a4d916a6257f4d71af04062d17\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[11.465774536132812, 2.975757598876953]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:28f63e0",
+      "summary": "```json\n{\n  \"summary\": \"The scene captures multiple cars moving across the frame with varying speeds and directions, while a bus remains stationary. Vehicles exhibit diverse motion patterns, including horizontal and diagonal trajectories, indicating a dynamic traffic environment.\",\n  \"claims\": [\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:a02fb1b6806b16e7d0e6103b1024e446710d8985d30f962e6fe179a5ba608804\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[54.38015365600586, -7.267167091369629]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:febf3e64c19f1879d4419a8de33a74d0853b553d9e16b783abd9620d3a3df146\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-28.092336654663086, 31.4528751373291]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:a84b25faf29f6270fd996c10cf37b7a787a1f45c0d20dd32ece53c3d6db2c9ee\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[10.233222007751465, -3.5697288513183594]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:64a2b2fd1ddf714d0f37ccba42a6055ce4c6ce70e126068648d58a1a98cee1b9\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-31.356916427612305, 15.65003490447998]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:fef1787c8dbeaa3fc87e53544b754612359b82efab198121a27312652895b75b\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-11.181168556213379, 11.14157772064209]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3ba6913c14a9ce5e54dbf81798b8f0ee70ffbec3bb4104798971a94ab7b1a62a\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[13.628900527954102, 4.232869625091553]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3b440c560a77376972b1bd1092f1516e8a47d7fc1f55d9c8073a1947284de62a\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[1.903855323791504, -1.903855323791504]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:1537bc86ff65a97d5d4313f823180df84ec6a05b225781511e6b337b6e72ce3b\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-1.1245849132537842, 8.418169975280762]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:608e652d96cf2560de639e75ef5979e984e581e4d16c96e0997ffcdbd444b40b\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[11.771600723266602, 6.6631340980529785]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:401c3048d5d4da13fee75c4d71173ac216ee7635518bee57871e3aafd7c27b3a\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[4.292421817779541, 3.465841293334961]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:e1fd1ddfb4396d25fe914ffdeadd9751833648aadf17e62479f564c522e51fae\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-9.21491813659668, 7.914666175842285]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:f0aa4d92571d6eac31df85563461830b51dc8decc0ac92fae4610e22fddc6ed5\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[8.806251525878906, 1.892769694328308]\",\n      \"confidence\": 0.98\n    }\n  ],\n  \"suggested_queries\": [],\n  \"trajectory_2d_norm_0_1000",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
@@ -259,42 +266,48 @@
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.706334662437439,
-      "edge": "urn:sha256:ab58a868641e34fd8000d0158f294e64eae28b008a76cd13ebced31b7e18f7e9",
+      "confidence": 0.7109292984008789,
+      "edge": "urn:sha256:3924794429106ac808f02a0b6b872096f282dee6729dd20d9a5ce5f925108367",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.701442849636078,
-      "edge": "urn:sha256:ceec5c7590e6570031787580746c031a7e9416be96cbab6774cd916084ea6d90",
+      "confidence": 0.710225522518158,
+      "edge": "urn:sha256:7ddc185a2225476bfe03780b3b6de57fc8fe63479104c042c25262896e441cd0",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.6998699903488159,
-      "edge": "urn:sha256:7e3d3e33fe3d487e6ca5efb76476d3dd2a9c06ae6093fab56b6857105108ba5d",
+      "confidence": 0.7098900198936463,
+      "edge": "urn:sha256:36d939c657aee4f882004baec0f13784806bb8b0c4675a36a0dc57f94c5f233d",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.6989971995353699,
-      "edge": "urn:sha256:484bafa67a5184af06473657dff1fb9923053ab206701039d79a8a0bd92a01aa",
+      "confidence": 0.7091525077819825,
+      "edge": "urn:sha256:4be2b048955d6d0689e549cc8c06e888ee80d42df0070cf2d57d585a01781906",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
+      "claim_breakdown": {
+        "retrieval_fallback": 4
+      },
       "claim_source": "retrieval_fallback",
+      "claim_sources": [
+        "retrieval_fallback"
+      ],
       "claims": 4,
-      "frame": "urn:sha256:29eae49a7d6cb4eb3e73136479b2097ef2debbf3fdd3dc72912a2c694052f34a",
+      "frame": "urn:sha256:7e8ee68660d6db274b0be138eb2ad38769db34ffcde8ede31ab66968aa44dc4c",
       "no_claim_reason": "no_structured_payload",
-      "summary": "```json\n{\n  \"summary\": \"The scene captures multiple cars moving across the frame with varying speeds and directions, alongside a bus and a train in the background. Vehicles exhibit distinct motion patterns, with some traveling horizontally while others move diagonally or vertically within the frame.\",\n  \"claims\": [\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3204b51689882d83a9701b80b46759dc066a21f7fe0d30824398af4fd18b9edd\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[65.83058166503906, -11.070586204528809]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:1671f5eb82902d66737b2bbdf38089a7ccb0b600dc3203a2c6f3a091a1366c11\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-36.30755615234375, 39.35498046875]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:748b947cb073330d235ea1f907fc2208b04c8455f2014d164f25130b44718f8c\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[14.040932655334473, -4.045692443847656]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:ce5646fb9600c4e55a19857aaf13b392028a99bc1af6f7ae05a069e031486fed\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-41.15462875366211, 20.264795303344727]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:51a1f7ecd8ac3a69050f07ba6d35bd314c502720838fe4d30dcbc86be7d0aa00\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-15.1386137008667, 13.89841365814209]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:97c76dee675f2697bbd038dff3e0ab9e22c632d3e287abd08a1dcaa67d800b09\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[13.046204566955566, 4.288726329803467]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:e7801f6b8422e8cffb74f6824f1a0c0681ec0301d86744eb240491fdfd94e0f6\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[17.17917251586914, 4.913705825805664]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:9ed0565c38755fa2f26ec89e76fc8a567b5304c191a77acca9be77396cf4e74a\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[2.1093006134033203, 12.006122589111328]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:db5ac1d934fa21b4c69766c48315392d42ff0cd81efd7e509e50f1950bfcf5f4\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[16.26058578491211, 7.29509162902832]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:62aa25454d3ef5d6085f185e7581ef1e1c1351aba029f9595b420c4b6560d32d\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[6.287909984588623, 4.1908860206604]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:6c1d4b1e31ecf09629dddf31005737b542b3f550520cf4bbfd50785ecc7db936\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-11.052895545959473, 9.635193824768066]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:92e911daaef3c0ac92d69966d27195a90b2916a4d916a6257f4d71af04062d17\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[11.465774536132812, 2.975757598876953]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:28f6",
+      "summary": "```json\n{\n  \"summary\": \"The scene captures multiple cars moving across the frame with varying speeds and directions, while a bus remains stationary. Vehicles exhibit diverse motion patterns, including horizontal and diagonal trajectories, indicating a dynamic traffic environment.\",\n  \"claims\": [\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:a02fb1b6806b16e7d0e6103b1024e446710d8985d30f962e6fe179a5ba608804\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[54.38015365600586, -7.267167091369629]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:febf3e64c19f1879d4419a8de33a74d0853b553d9e16b783abd9620d3a3df146\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-28.092336654663086, 31.4528751373291]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:a84b25faf29f6270fd996c10cf37b7a787a1f45c0d20dd32ece53c3d6db2c9ee\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[10.233222007751465, -3.5697288513183594]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:64a2b2fd1ddf714d0f37ccba42a6055ce4c6ce70e126068648d58a1a98cee1b9\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-31.356916427612305, 15.65003490447998]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:fef1787c8dbeaa3fc87e53544b754612359b82efab198121a27312652895b75b\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-11.181168556213379, 11.14157772064209]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3ba6913c14a9ce5e54dbf81798b8f0ee70ffbec3bb4104798971a94ab7b1a62a\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[13.628900527954102, 4.232869625091553]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3b440c560a77376972b1bd1092f1516e8a47d7fc1f55d9c8073a1947284de62a\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[1.903855323791504, -1.903855323791504]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:1537bc86ff65a97d5d4313f823180df84ec6a05b225781511e6b337b6e72ce3b\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-1.1245849132537842, 8.418169975280762]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:608e652d96cf2560de639e75ef5979e984e581e4d16c96e0997ffcdbd444b40b\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[11.771600723266602, 6.6631340980529785]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:401c3048d5d4da13fee75c4d71173ac216ee7635518bee57871e3aafd7c27b3a\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[4.292421817779541, 3.465841293334961]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:e1fd1ddfb4396d25fe914ffdeadd9751833648aadf17e62479f564c522e51fae\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-9.21491813659668, 7.914666175842285]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:f0aa4d92571d6eac31df85563461830b51dc8decc0ac92fae4610e22fddc6ed5\",\n      \"predicate_iri\": \"https://example.org/robosikg#has_velocity_xy_px_per_frame\",\n      \"object_uri\": \"[8.806251525878906, 1.892769694328308]\",\n      \"confidence\": 0.98\n    }\n  ],\n  \"suggested_queries\": [],\n  \"trajectory_2d_norm_0_1000",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
@@ -302,42 +315,48 @@
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7046421647071839,
-      "edge": "urn:sha256:8745f923d14afb7c820bcb72e02160d3c64e8e373fbeae7543f042e40df15e5d",
+      "confidence": 0.7321197390556335,
+      "edge": "urn:sha256:68428c1f5dd60c62c56d9767496147fc4e0695e4b3bd1e70ee94d6f63ad62a91",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7026372432708741,
-      "edge": "urn:sha256:36694bb7f5ed85c0f2a9f5bcc256ea3a2e21fcbf5a849c9f04f3b4a55085a168",
+      "confidence": 0.7272054195404053,
+      "edge": "urn:sha256:c9e2e39c23ba1d03d5f20b4b056cf70dfd2626c1de4300e46bec7213576ba0d8",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7020734667778016,
-      "edge": "urn:sha256:31b1382418687d6b5e477aa58ee471f849f145e5f64c856983b32500b5f77b5e",
+      "confidence": 0.725712776184082,
+      "edge": "urn:sha256:5a8a67be4f449af391599f22edd9e70db1380ca0138ecb6c4fe9bed22161cb5d",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.6991796374320984,
-      "edge": "urn:sha256:772ea3945282189065b25f56aa6b384f997ac3636a24964f703738b569834bc9",
+      "confidence": 0.7241583824157716,
+      "edge": "urn:sha256:2fbe2e10cad8504fba38994ea34c0365c88ea4063b479a8a524dd626cd6139be",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
+      "claim_breakdown": {
+        "retrieval_fallback": 4
+      },
       "claim_source": "retrieval_fallback",
+      "claim_sources": [
+        "retrieval_fallback"
+      ],
       "claims": 4,
-      "frame": "urn:sha256:2ad858fb6ef6b6042d17ef2d76fd94e44d10c923a870554e8d79349a127241ce",
+      "frame": "urn:sha256:8d6deeaf9e66fd420e43f76ce37d374eb40a9f019d6ad36d32e049b48947de4e",
       "no_claim_reason": "insufficient_evidence",
-      "summary": "The scene captures multiple cars moving across the frame with varying speeds and directions, alongside a bus and a train in the background. Vehicles exhibit distinct motion patterns, with some traveling horizontally while others move diagonally or vertically within the frame.",
+      "summary": "The scene shows multiple cars moving across the frame with varying speeds and directions, while a bus remains stationary. Vehicles exhibit diverse motion patterns, including horizontal and diagonal trajectories, indicating a dynamic traffic environment.",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
@@ -345,85 +364,48 @@
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.733167326450348,
-      "edge": "urn:sha256:2f6359d6bcf6de656af02bd6fc4eef727cd51d41a5796fc7240642ef71202a65",
+      "confidence": 0.7281448006629945,
+      "edge": "urn:sha256:a0a8b3471126b0fa4091e7c6ef8b3ec2baa36c9914e9e87062dcbfa05b5bb21a",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7313007235527039,
-      "edge": "urn:sha256:a7bd1c850dc5577ca207dd885c066774c95861ed3af854c3d4ae8e94ad3c6ac8",
+      "confidence": 0.727872920036316,
+      "edge": "urn:sha256:a7771529fbfc80801c3720fade36916b4f2fb2257fb31b6b2356271bfec21698",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7260424494743347,
-      "edge": "urn:sha256:f48c3bbcd8a62d07241858eb566456d5f7fdb0d4fcc2d2d9ef7d5ed129ba65af",
+      "confidence": 0.7277704119682312,
+      "edge": "urn:sha256:948d04232881c20c8c8c3b182782396751f2a547e4204ec5ce76f86a06b75474",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7137310981750489,
-      "edge": "urn:sha256:bbe0ab664bb9333cd6bf4d861c932c63ef1c4461bb7856d503d94cfb6fb93b73",
+      "confidence": 0.7274748325347901,
+      "edge": "urn:sha256:82058e875872cf747106bf8201307459ade51557a7ea29b9f91109e88855f1ac",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
+      "claim_breakdown": {
+        "retrieval_fallback": 4
+      },
       "claim_source": "retrieval_fallback",
+      "claim_sources": [
+        "retrieval_fallback"
+      ],
       "claims": 4,
-      "frame": "urn:sha256:0080add63a7da902ac257a3aeb5e1f7437adcd2d4f447eeba445708a128385e3",
-      "no_claim_reason": "no_structured_payload",
-      "summary": "{\n  \"summary\": \"The scene depicts multiple vehicles, including cars, a bus, and a train, moving across the frame with varying speeds and directions. Cars exhibit diverse motion patterns, such as horizontal, diagonal, and vertical movements, while the bus and train remain stationary in the background.\",\n  \"claims\": [\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:3204b51689882d83a9701b80b46759dc066a21f7fe0d30824398af4fd18b9edd\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[65.83058166503906, -11.070586204528809]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:1671f5eb82902d66737b2bbdf38089a7ccb0b600dc3203a2c6f3a091a1366c11\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-36.30755615234375, 39.35498046875]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:748b947cb073330d235ea1f907fc2208b04c8455f2014d164f25130b44718f8c\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[14.040932655334473, -4.045692443847656]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:ce5646fb9600c4e55a19857aaf13b392028a99bc1af6f7ae05a069e031486fed\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-41.15462875366211, 20.264795303344727]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:51a1f7ecd8ac3a69050f07ba6d35bd314c502720838fe4d30dcbc86be7d0aa00\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-15.1386137008667, 13.89841365814209]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:97c76dee675f2697bbd038dff3e0ab9e22c632d3e287abd08a1dcaa67d800b09\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[13.046204566955566, 4.288726329803467]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:e7801f6b8422e8cffb74f6824f1a0c0681ec0301d86744eb240491fdfd94e0f6\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[17.17917251586914, 4.913705825805664]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:9ed0565c38755fa2f26ec89e76fc8a567b5304c191a77acca9be77396cf4e74a\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[2.1093006134033203, 12.006122589111328]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:db5ac1d934fa21b4c69766c48315392d42ff0cd81efd7e509e50f1950bfcf5f4\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[16.26058578491211, 7.29509162902832]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:62aa25454d3ef5d6085f185e7581ef1e1c1351aba029f9595b420c4b6560d32d\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[6.287909984588623, 4.1908860206604]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:6c1d4b1e31ecf09629dddf31005737b542b3f550520cf4bbfd50785ecc7db936\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[-11.052895545959473, 9.635193824768066]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:92e911daaef3c0ac92d69966d27195a90b2916a4d916a6257f4d71af04062d17\",\n      \"predicate_iri\": \"https://example.org/robosikg#velocity_xy_px_per_frame\",\n      \"object_uri\": \"[11.465774536132812, 2.975757598876953]\",\n      \"confidence\": 0.98\n    },\n    {\n      \"type\": \"has_velocity\",\n      \"subject_uri\": \"urn:sha256:",
-      "trajectory_points": 5,
-      "trajectory_source": "track_motion_fallback",
-      "type": "reasoning_summary"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "retrieval_fallback",
-      "confidence": 0.7367002248764039,
-      "edge": "urn:sha256:d6f669a7458da0e8aa7a8eb46dda2355998ac6a74e2a809b28aaba4a9db902b0",
-      "summary": "retrieval_near",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "retrieval_fallback",
-      "confidence": 0.6989748239517213,
-      "edge": "urn:sha256:4d320227fc56039384322c73efa0c744e80bedd0a53695e069508cab522ab92f",
-      "summary": "retrieval_near",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "retrieval_fallback",
-      "confidence": 0.6975765228271484,
-      "edge": "urn:sha256:ae3453c8b7f51dcb86fcd72e70bd40de8d377cdc566caf2f57f6ade633ca31a8",
-      "summary": "retrieval_near",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "retrieval_fallback",
-      "confidence": 0.6971106886863709,
-      "edge": "urn:sha256:30a1de39a9d159f15f1d2e7bf5fa8c237621a3a1fbd8a76a194f1a006f358e8b",
-      "summary": "retrieval_near",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "retrieval_fallback",
-      "claims": 4,
-      "frame": "urn:sha256:e8c0258428b6d5dfb77d1f4eeee12f1668c4c428463ff773c6c9d27cb4a1c2d4",
+      "frame": "urn:sha256:9b34518ff4be269a45911e21e21a10567ea9f5f597a569b4cb2ff0a4db103658",
       "no_claim_reason": "insufficient_evidence",
-      "summary": "The scene captures multiple cars moving across the frame with varying speeds and directions, alongside a bus and a train in the background. Vehicles exhibit distinct motion patterns, with some traveling horizontally while others move diagonally or vertically within the frame.",
+      "summary": "The scene captures multiple cars moving across the frame with varying speeds and directions, while a bus remains stationary. Vehicles exhibit diverse motion patterns, including horizontal and diagonal trajectories, indicating a dynamic traffic environment.",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
@@ -431,54 +413,71 @@
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.721973729133606,
-      "edge": "urn:sha256:1697763568a21fed4936acd07b7ab4f2e41d60aeca8e0dae2233cf26945139a3",
+      "confidence": 0.7475834488868713,
+      "edge": "urn:sha256:ec97579b9503b4d7894180920f9517dfc6b1de987385065348c74160062a0c13",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7200812816619874,
-      "edge": "urn:sha256:2530fb019107a4121c2ca9f91968aa559e4917313b2b4a5f93ac3791528839b4",
+      "confidence": 0.7372364401817322,
+      "edge": "urn:sha256:30b1e428b90546c9aeac0fa307795c165a40495423dd7adb086e453eb7300926",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7194777607917786,
-      "edge": "urn:sha256:7600f7b99a46697b88b253a2249f29d75ea9c4f231ff38e4a1017175bf72f718",
+      "confidence": 0.7353905439376831,
+      "edge": "urn:sha256:a8aa1120fe03e4255bcdacf110cd5aacacf43aa0e5fa5bcd951845e23612d18a",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7187925815582276,
-      "edge": "urn:sha256:e48d683e0918764b0a593632ce2c656c18b932b832bed7c52fdfed67c7787bb8",
+      "confidence": 0.7347763299942017,
+      "edge": "urn:sha256:209890e4ad6e070bdd7428946b9fe38df29628d7bf01303e1621ab85d35aaaba",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
+      "claim_breakdown": {
+        "retrieval_fallback": 4
+      },
       "claim_source": "retrieval_fallback",
+      "claim_sources": [
+        "retrieval_fallback"
+      ],
       "claims": 4,
-      "frame": "urn:sha256:bf0e593ecf90897d15f52bbf66858e65f6812ecc708b380c24f800b99289d3da",
-      "no_claim_reason": null,
-      "summary": "The scene captures multiple cars moving across the frame with varying speeds and directions, alongside a bus and a train in the background. Vehicles exhibit distinct motion patterns, with some traveling horizontally while others move diagonally or vertically within the frame.",
+      "frame": "urn:sha256:85f68681d3fd5d47e4e3fd8da0ecb03ed9c68fb6a98456164b9ff02a095d0c3f",
+      "no_claim_reason": "insufficient_evidence",
+      "summary": "The scene captures multiple cars moving across the frame with varying speeds and directions, while a bus remains stationary. Vehicles exhibit diverse motion patterns, including horizontal and diagonal trajectories, indicating a dynamic traffic environment.",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
     }
   ],
+  "input_mp4_path": "data/scratch/traffic.mp4",
   "reasoning_backend": "nim",
   "reasoning_fallbacks": 0,
-  "source_id": "traffic_video",
+  "source_id": "traffic",
   "timing": {
-    "effective_fps": 0.14894479237092836,
-    "elapsed_s": 335.69485179099956,
-    "finished_ns": 1772062114000493361,
-    "started_ns": 1772061778353354780
+    "effective_fps": 0.2246452757511015,
+    "elapsed_s": 298.24798129400006,
+    "finished_ns": 1772397387761267881,
+    "stages_s": {
+      "ann_search_s": 0.18822257899591932,
+      "detector_s": 16.86211827700754,
+      "embedding_s": 7.409751762977976,
+      "io_s": 3.5762011829792755,
+      "kg_write_s": 0.3004056780046085,
+      "reasoning_pipeline_s": 269.6294228780098,
+      "reasoning_s": 269.412527711007,
+      "tracking_s": 0.4700815150208655
+    },
+    "started_ns": 1772397090106813052
   }
 }

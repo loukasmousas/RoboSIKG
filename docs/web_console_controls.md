@@ -74,6 +74,9 @@ This guide documents every control in the Ops Console and what each one does.
 
 - `Upload`:
   - Uploads `.mp4` to `data/scratch` (`POST /api/upload`).
+- `Source ID`:
+  - Default is `auto`, which derives a stable source id from the MP4 filename.
+  - Prevents accidental source-id reuse across different videos.
 - `Run Pipeline`:
   - Starts a new run (`POST /api/run`) with panel settings.
 - Module pills:
@@ -88,6 +91,18 @@ This guide documents every control in the Ops Console and what each one does.
 - `Run`:
   - Executes SPARQL against selected run graph (`POST /api/sparql/query`).
   - Returns tabular rows rendered in chat preview.
+  - Applies SPARQL focus globally:
+    - graph node filtering
+    - chat/trace filtering
+    - video overlay focus
+- `Clear SPARQL Focus`:
+  - Removes active SPARQL focus and restores full graph/chat/video context.
+
+### SPARQL Focus Behavior
+
+- Frame seeking/focus is applied only when the query has explicit frame binding columns (for example `?frameIdx`, `?frameUri`).
+- Queries without explicit frame bindings still filter graph/chat context by returned URIs.
+- Frame-specific demonstration queries are documented in `docs/sparql_query_playbook.md`.
 
 ## Graph Labels
 

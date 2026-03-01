@@ -7,8 +7,8 @@
   },
   "config": {
     "ingest": {
-      "max_frames": 500,
-      "sample_fps": 4.0,
+      "max_frames": 600,
+      "sample_fps": 5.0,
       "timestamp_origin_ns": 0
     },
     "kg": {
@@ -20,14 +20,14 @@
       "device": "cuda",
       "pretrained": true,
       "require_cuda": true,
-      "score_thresh": 0.5
+      "score_thresh": 0.45
     },
     "reasoning": {
       "debug_capture": true,
       "mode": "nim",
       "model_name": "nvidia/cosmos-reason2-8b",
-      "nim_base_url": "http://160.211.47.58:8000/v1",
-      "reason_every_n_frames": 5,
+      "nim_base_url": "http://160.211.47.74:8000/v1",
+      "reason_every_n_frames": 6,
       "timeout_s": 60.0
     },
     "tracking": {
@@ -45,116 +45,109 @@
     }
   },
   "counts": {
-    "events_total": 57,
-    "frames_seen": 61,
-    "kg_triples": 10084,
-    "reasoning_avg_claims_per_invocation": 3.75,
-    "reasoning_claims_total": 45,
-    "reasoning_debug_entries": 12,
-    "reasoning_deterministic_fallback_claims_total": 15,
-    "reasoning_deterministic_fallback_invocations": 6,
-    "reasoning_invocations": 12,
-    "reasoning_invocations_with_claims": 12,
-    "reasoning_model_claims_total": 30,
+    "events_total": 69,
+    "frames_seen": 81,
+    "kg_triples": 13970,
+    "reasoning_avg_claims_per_invocation": 4.3076923076923075,
+    "reasoning_claims_total": 56,
+    "reasoning_consultant_claims_total": 12,
+    "reasoning_consultant_fusion_invocations": 4,
+    "reasoning_debug_entries": 13,
+    "reasoning_deterministic_fallback_claims_total": 24,
+    "reasoning_deterministic_fallback_invocations": 9,
+    "reasoning_invocations": 13,
+    "reasoning_invocations_with_claims": 13,
+    "reasoning_model_claims_total": 20,
     "reasoning_zero_claim_invocations": 0,
-    "regions_added": 1152,
+    "regions_added": 1612,
     "stopped_early": false,
-    "tracks_seen": 120,
-    "trajectory_points_total": 60,
-    "vector_items": 1152
+    "tracks_seen": 140,
+    "trajectory_points_total": 65,
+    "vector_items": 1612
   },
   "errors": [],
   "events": [
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:12133436736276d62bda53c1ad502a59283a68acab2b2439b6247649e467852c",
-      "summary": "has",
+      "confidence": 0.5,
+      "edge": "urn:sha256:07787a0493920ded74bc1a70900d814442f517a99a86e56c94a5fd7caad1e6f0",
+      "summary": "truck",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:b63079f523104f074d7d58ec9863a18dcc80a201abd6acaa7cef2ee7fbeb84f3",
-      "summary": "has",
+      "confidence": 0.5,
+      "edge": "urn:sha256:0a76e586e67c873f6236f3ffcc9c91f15dd7903f7655a1dae12357a2ddeeef7c",
+      "summary": "sports ball",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:29cc0971ff45671e537d2e88965d52289207b873cd5e449812391708784b1b20",
-      "summary": "has",
+      "confidence": 0.5,
+      "edge": "urn:sha256:046bf97e681784cee4864e83e23ceaa0caef0396ec0d40386fb1b610deaacfaf",
+      "summary": "person",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:cd2087b2745e34ecc6c0717267a368aa055ef5b013a5d8b655ee79c2c958e9da",
-      "summary": "has",
+      "confidence": 0.5,
+      "edge": "urn:sha256:7b512f9d13c5c8eaf635a5664f5e0eae6d690a59f29232bc72c04d93d8ebd2b0",
+      "summary": "car",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:e28eb988b6516b3cec6c91292fbe7b7652ebae4a278081adc346c605173febdf",
-      "summary": "has",
+      "confidence": 0.5,
+      "edge": "urn:sha256:30e8b1fcc6c03e7794cd694e2fbb5948cee186243930020b36ab2c35a79fefc1",
+      "summary": "kite",
       "type": "claim"
     },
     {
       "backend": "nim",
-      "claim_source": "nim",
-      "claims": 5,
-      "frame": "urn:sha256:a7b6f35515201a828d4f9270c49971dd433cdf6420497d7bb305aeef8ee423dc",
+      "claim_source": "geometric_consultant",
+      "confidence": 0.72,
+      "edge": "urn:sha256:41cf2462090811f3bec912f779ffe901cfb7cd155bd051fff6c8e2bf2e5bb051",
+      "summary": "geometry_inside",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_consultant",
+      "confidence": 0.72,
+      "edge": "urn:sha256:b0967ac9edac5d65ad09d65e70def1c04ab6fc2a0f9b84f653052c2981b7c77e",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_consultant",
+      "confidence": 0.72,
+      "edge": "urn:sha256:3c2a9a85afd7540349b3e538e0b2d8b4f9524dcfbbacfa668fa7eb9b883fc1b0",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_breakdown": {
+        "geometric_consultant": 1,
+        "nim": 5,
+        "retrieval_consultant": 2
+      },
+      "claim_source": "mixed",
+      "claim_sources": [
+        "geometric_consultant",
+        "nim",
+        "retrieval_consultant"
+      ],
+      "claims": 8,
+      "frame": "urn:sha256:c13b757e9bc49d836d973d33f0ff73213b64c5e8f8fa4a7bf6a5020d49eef66e",
       "no_claim_reason": null,
-      "summary": "The scene captures a dynamic environment with multiple objects in motion, including kites, cars, trucks, and sports balls, all moving across the frame with varying speeds and directions. The primary focus is on the interaction between these objects within the spatial layout of the video.",
-      "trajectory_points": 5,
-      "trajectory_source": "track_motion_fallback",
-      "type": "reasoning_summary"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "retrieval_fallback",
-      "confidence": 0.7317575931549073,
-      "edge": "urn:sha256:7d747af50fc8d67f28de8a4b9f8e0fd2ae73b462fd1177a540833cf3a6debdee",
-      "summary": "retrieval_near",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "retrieval_fallback",
-      "confidence": 0.7240398645401002,
-      "edge": "urn:sha256:00f9bc10134d4e680484b1c3aa3ac3d2c107c9a0b5c88ddee5a00e0c313d91bd",
-      "summary": "retrieval_near",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "retrieval_fallback",
-      "confidence": 0.7135465145111084,
-      "edge": "urn:sha256:51a9294fa8ff99537b8b186d9e1ce3ff9c5f5722751903c6e9bcec339daf158e",
-      "summary": "retrieval_near",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "retrieval_fallback",
-      "confidence": 0.7121427178382874,
-      "edge": "urn:sha256:7e66f328350fd1ea034a0be0c0ce8284ccf03c4498da73667fd3773dddb1edd0",
-      "summary": "retrieval_near",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "retrieval_fallback",
-      "claims": 4,
-      "frame": "urn:sha256:d0ee6034203fca8d7c4d544562f46ed33ef71df1d8d08ae28c82c5beb5ed9016",
-      "no_claim_reason": null,
-      "summary": "The scene depicts a dynamic environment with various objects in motion, including kites, cars, trucks, and sports balls, interacting within the frame. The primary focus is on the movement and positioning of these objects relative to one another and their surroundings.",
+      "summary": "The scene features multiple kites and sports balls in motion, with a person and vehicles visible in the background. The kites are moving across the frame, while the sports balls appear to be in flight, suggesting dynamic activity within the video.",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
@@ -163,17 +156,23 @@
       "backend": "nim",
       "claim_source": "geometric_fallback",
       "confidence": 0.9,
-      "edge": "urn:sha256:4c5ac74420a1856c817306d3638ed4876918e0e932feb477de98d6f2f90a314e",
+      "edge": "urn:sha256:162324a95830f168a43304da1dcef3c2bbea4237a1296f4784c76be1e4d8f0d8",
       "summary": "geometry_inside",
       "type": "claim"
     },
     {
       "backend": "nim",
+      "claim_breakdown": {
+        "geometric_fallback": 1
+      },
       "claim_source": "geometric_fallback",
+      "claim_sources": [
+        "geometric_fallback"
+      ],
       "claims": 1,
-      "frame": "urn:sha256:9c28719d09493ea61835db09589a9b009a02a1c6f510fcdafbbf29757b345a88",
-      "no_claim_reason": "insufficient_evidence",
-      "summary": "The scene captures a dynamic environment with multiple objects in motion, including kites, cars, trucks, and sports balls, all moving across the frame with varying speeds and directions. The primary focus is on the interaction between these objects within the spatial layout of the video.",
+      "frame": "urn:sha256:8be5ae7da0cd6a7836e006f478d98644d941060dae54cd5e7aac38673ede0ce2",
+      "no_claim_reason": null,
+      "summary": "The scene captures a dynamic environment featuring multiple kites and sports balls in motion, along with a person and vehicles in the background. The kites are actively flying across the frame, while the sports balls appear to be in flight, indicating ongoing activity within the video.",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
@@ -182,17 +181,23 @@
       "backend": "nim",
       "claim_source": "geometric_fallback",
       "confidence": 0.9,
-      "edge": "urn:sha256:25934b36867e42310b98f3e98e894608a9dc46be2708b78ced56091d7a07e6ab",
+      "edge": "urn:sha256:a7cc9cfd0ef167ef06053c4ccca410ba4a19c3e708c27ffa9b7a4179001c9478",
       "summary": "geometry_inside",
       "type": "claim"
     },
     {
       "backend": "nim",
+      "claim_breakdown": {
+        "geometric_fallback": 1
+      },
       "claim_source": "geometric_fallback",
+      "claim_sources": [
+        "geometric_fallback"
+      ],
       "claims": 1,
-      "frame": "urn:sha256:6ab78c1c69bf78ce4f75c99045e8511fb56dc116f7f8684f6069517b7924ca10",
-      "no_claim_reason": "insufficient_evidence",
-      "summary": "The scene captures a dynamic environment with multiple objects in motion, including kites, cars, trucks, and sports balls, all moving across the frame with varying speeds and directions. The primary focus is on the interaction between these objects within the spatial layout of the video.",
+      "frame": "urn:sha256:8b30c07d718004b9263c45ed3b6efb2b6c3fd382957dd79c9e5a117a6a6d72a7",
+      "no_claim_reason": null,
+      "summary": "The scene captures a dynamic environment with multiple kites and sports balls in motion, alongside a person and vehicles in the background. The kites are actively flying across the frame, while the sports balls appear to be in flight, suggesting ongoing activity within the video.",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
@@ -201,17 +206,23 @@
       "backend": "nim",
       "claim_source": "geometric_fallback",
       "confidence": 0.9,
-      "edge": "urn:sha256:339ad1c0bffb6e6a816dd1ed46c9c720535d82555b8466931d351eb7a494aa0e",
+      "edge": "urn:sha256:740bfb8035c077da947fab0e0c421594420964363e254661f1b28454fe4f3000",
       "summary": "geometry_inside",
       "type": "claim"
     },
     {
       "backend": "nim",
+      "claim_breakdown": {
+        "geometric_fallback": 1
+      },
       "claim_source": "geometric_fallback",
+      "claim_sources": [
+        "geometric_fallback"
+      ],
       "claims": 1,
-      "frame": "urn:sha256:705da5aa813acb1fe1f9f9e23bbfe6bc1680b75ceb25c74cf572f7352acaec1a",
-      "no_claim_reason": "insufficient_evidence",
-      "summary": "The scene captures a dynamic environment with multiple objects in motion, including kites, cars, trucks, and sports balls, all moving across the frame with varying speeds and directions. The primary focus is on the interaction between these objects within the spatial layout of the video.",
+      "frame": "urn:sha256:0814c68b2e804614d21fbc8c61b7763418e97d053c3def6c3dba7bc7d9b898d7",
+      "no_claim_reason": null,
+      "summary": "The scene captures a dynamic environment with multiple kites and sports balls in motion, along with a person and vehicles in the background. The kites are actively flying across the frame, while the sports balls appear to be in flight, suggesting ongoing activity within the video.",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
@@ -219,50 +230,109 @@
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:d5e3b0689c6396bbba51b13b6a16a53441cbd8f06baebe4c937c3cbaf7102623",
+      "confidence": 0.9,
+      "edge": "urn:sha256:aac9c554a31571fd71c5b3ab7a9ee5805f187f6928d793335940d80681b354c7",
       "summary": "claim",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:a35ea4b93c42006d3425b3e655c5a2e9a2854908e50529f22a6d3d32a6eee8c6",
+      "confidence": 0.9,
+      "edge": "urn:sha256:32788dcee120060161aa567778190e4dafbdbf8e822435c0ea5e285788cbb600",
       "summary": "claim",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:7c419d8838a98ef5ba4ab953903a0b5910b32aa28f83862266f539ef4c1d1bc9",
+      "confidence": 0.9,
+      "edge": "urn:sha256:0af177f9624aad60b76ffa6019a967cf6a4e6879e3e2d93bb32ab3740fb22bf6",
       "summary": "claim",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:8e63a343e23ea645e6e5fab43ab23f436de265ec87380827cb4ced0478349565",
+      "confidence": 0.9,
+      "edge": "urn:sha256:324d7e7443da0c1cf87d60f1341e843951044c0fc83d3cfe536c4ce5458bcb22",
       "summary": "claim",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:f0e7757a75b5f7e7a752d220f5a5ccacefe91462a071b30f2690f4cd6568cd7a",
+      "confidence": 0.9,
+      "edge": "urn:sha256:c41d7bbb2c3f75b52cc4edc3949f173e24632c77cecf30b0025f09a96c0d396f",
       "summary": "claim",
       "type": "claim"
     },
     {
       "backend": "nim",
-      "claim_source": "nim",
-      "claims": 5,
-      "frame": "urn:sha256:29eae49a7d6cb4eb3e73136479b2097ef2debbf3fdd3dc72912a2c694052f34a",
+      "claim_source": "geometric_consultant",
+      "confidence": 0.72,
+      "edge": "urn:sha256:9ac7cfc235217c89880f854ffa90843f3a6f0a3412d201be1779138bf709676a",
+      "summary": "geometry_inside",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_consultant",
+      "confidence": 0.72,
+      "edge": "urn:sha256:08ea8bcb7023adc3f3b21bd141644b57f776dad6a64ddc7bcacbcc3dbb73410e",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_consultant",
+      "confidence": 0.72,
+      "edge": "urn:sha256:fb3bcce7bbe3820ee602ec02cdd8196d4207377dde992d8533a21a48149e0773",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_breakdown": {
+        "geometric_consultant": 1,
+        "nim": 5,
+        "retrieval_consultant": 2
+      },
+      "claim_source": "mixed",
+      "claim_sources": [
+        "geometric_consultant",
+        "nim",
+        "retrieval_consultant"
+      ],
+      "claims": 8,
+      "frame": "urn:sha256:8e87c281e0a912c98dcd84f167569b0253ffc7c1708804affc0a8344e1f971df",
       "no_claim_reason": null,
-      "summary": "The scene captures a dynamic environment with multiple objects in motion, including kites, cars, trucks, and sports balls, all moving across the frame with varying speeds and directions. The primary focus is on the interaction between these objects within the spatial layout of the video.",
+      "summary": "The scene captures a dynamic environment with multiple kites and sports balls in motion, along with a person and vehicles in the background. The kites are actively flying across the frame, while the sports balls appear to be in flight, suggesting ongoing activity within the video.",
+      "trajectory_points": 5,
+      "trajectory_source": "track_motion_fallback",
+      "type": "reasoning_summary"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "geometric_fallback",
+      "confidence": 0.9,
+      "edge": "urn:sha256:68460b89e1d723f7255f852b159afa1c78edc39f5fc17c9ad06e39b491aba159",
+      "summary": "geometry_inside",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_breakdown": {
+        "geometric_fallback": 1
+      },
+      "claim_source": "geometric_fallback",
+      "claim_sources": [
+        "geometric_fallback"
+      ],
+      "claims": 1,
+      "frame": "urn:sha256:f932a4ddc099c2b3371f14f7f710689e9203bc156cfa8060a2fc7681ca3e371a",
+      "no_claim_reason": null,
+      "summary": "The scene captures a dynamic environment with multiple kites and sports balls in motion, along with a person and vehicles in the background. The kites are actively flying across the frame, while the sports balls appear to be in flight, suggesting ongoing activity within the video.",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
@@ -270,50 +340,82 @@
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:0545535b933766cdc889dd271ed45137e03d5be685ef4637925968b38f71725f",
+      "confidence": 0.9,
+      "edge": "urn:sha256:ebf693413916b3d474c0832bb011d00d87a0ec8f1ba049ad5ebefcdccc6a6d78",
       "summary": "claim",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:ac30560d6dff450a66ad97e6804b42726aa3224b87aa58157910058e9c712e50",
+      "confidence": 0.9,
+      "edge": "urn:sha256:de50c1dca2904582a70753d5daff9e29e067516ded7b44fdfd22b3ff4cfca2fe",
       "summary": "claim",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:7f1852ef6aa03eebbca8e2d2bd68944431a6261c3849fd9194a17afdbfc7501d",
+      "confidence": 0.9,
+      "edge": "urn:sha256:92e2cdd78d093411f1adfdcb9f74d570a07ae3cc09f67675e7f241186f5c6fbd",
       "summary": "claim",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:254fc2d2079b1fe825d491ac1f163dd0a4a9a2cb92fa81723de9f11ce83f1b4e",
+      "confidence": 0.9,
+      "edge": "urn:sha256:7cf5368380e208fe32adf9b46d4cd04a45c6b735eb1b8cd31fb6e04cbd9c1541",
       "summary": "claim",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:1e3ac70a41c2b51a03eae9d31a8a81b5914075b9c8d6319a472a7f9d8eb07c3e",
+      "confidence": 0.9,
+      "edge": "urn:sha256:03954b3a2c88114628195eafc5089c593e6977d1aa5d4817f73c2a42d4771f6d",
       "summary": "claim",
       "type": "claim"
     },
     {
       "backend": "nim",
-      "claim_source": "nim",
-      "claims": 5,
-      "frame": "urn:sha256:2ad858fb6ef6b6042d17ef2d76fd94e44d10c923a870554e8d79349a127241ce",
+      "claim_source": "retrieval_consultant",
+      "confidence": 0.72,
+      "edge": "urn:sha256:8d9dd1b1106bbdb36b4b5919214256bac57604fdd3cfb3e50da5223f4ec8f7de",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_consultant",
+      "confidence": 0.72,
+      "edge": "urn:sha256:16d484bf7e55a45b59c855be38373fed29d5a67ed71b8292996f88d4a941b709",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_consultant",
+      "confidence": 0.72,
+      "edge": "urn:sha256:abaa35a18c37ea705a5325c254e70c55d13c2a815556ffa8f5fb45e612a2d594",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_breakdown": {
+        "nim": 5,
+        "retrieval_consultant": 3
+      },
+      "claim_source": "mixed",
+      "claim_sources": [
+        "nim",
+        "retrieval_consultant"
+      ],
+      "claims": 8,
+      "frame": "urn:sha256:ab30baeb17cb34ac59e28ea4f5cebb6547c85ca8412c967c207b2f906a7ba77d",
       "no_claim_reason": null,
-      "summary": "The scene features multiple objects in motion, including kites, cars, trucks, and sports balls, interacting dynamically within the frame. Objects move across the scene with varying speeds and directions, creating a complex spatial arrangement.",
+      "summary": "The scene captures a dynamic environment featuring multiple kites and sports balls in motion, along with a person and vehicles in the background. The kites are actively flying across the frame, while the sports balls appear to be in flight, suggesting ongoing activity within the video.",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
@@ -321,101 +423,82 @@
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:887aae6cebae914789d22638e51f3116e0a74f83d75772f4dff6df1384b014e6",
+      "confidence": 0.9,
+      "edge": "urn:sha256:ebf693413916b3d474c0832bb011d00d87a0ec8f1ba049ad5ebefcdccc6a6d78",
       "summary": "claim",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:fd2e72342ac7b964ec1b53704af181c4473117d0fd920799cb067cb0898569a2",
+      "confidence": 0.9,
+      "edge": "urn:sha256:de50c1dca2904582a70753d5daff9e29e067516ded7b44fdfd22b3ff4cfca2fe",
       "summary": "claim",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:b3782a9a00985cebfa7d1374395cc4a9336d00f243e45c85649c4938c040e66c",
+      "confidence": 0.9,
+      "edge": "urn:sha256:92e2cdd78d093411f1adfdcb9f74d570a07ae3cc09f67675e7f241186f5c6fbd",
       "summary": "claim",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:39e533e6c5f0c9d3fc4edcb2a3df9dc327889c4519d3d66412164e5612b8d1c1",
+      "confidence": 0.9,
+      "edge": "urn:sha256:7cf5368380e208fe32adf9b46d4cd04a45c6b735eb1b8cd31fb6e04cbd9c1541",
       "summary": "claim",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:e43c9512a74ee2182d80d79c38fe65b1009352d15d498a2ea7917921122212a8",
+      "confidence": 0.9,
+      "edge": "urn:sha256:03954b3a2c88114628195eafc5089c593e6977d1aa5d4817f73c2a42d4771f6d",
       "summary": "claim",
       "type": "claim"
     },
     {
       "backend": "nim",
-      "claim_source": "nim",
-      "claims": 5,
-      "frame": "urn:sha256:0080add63a7da902ac257a3aeb5e1f7437adcd2d4f447eeba445708a128385e3",
+      "claim_source": "retrieval_consultant",
+      "confidence": 0.72,
+      "edge": "urn:sha256:886f3ebd17595abbf432acebf0ced4ca3f00ae7f66edc0b260cc4e4e2d51822b",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_consultant",
+      "confidence": 0.72,
+      "edge": "urn:sha256:7da7f4d08725091f3df92cc85a33af67e515b1532d50cd5416a86e4d991dc75a",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_consultant",
+      "confidence": 0.72,
+      "edge": "urn:sha256:c24eb9a0da30b666ab5ed8e7a46c6d455e2bf183052c806998ac49ec767967c8",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_breakdown": {
+        "nim": 5,
+        "retrieval_consultant": 3
+      },
+      "claim_source": "mixed",
+      "claim_sources": [
+        "nim",
+        "retrieval_consultant"
+      ],
+      "claims": 8,
+      "frame": "urn:sha256:c321e1aa0bd34bd7f3b287fb56d59f2a183bd43aeed33a7598efc9ea266e15c5",
       "no_claim_reason": null,
-      "summary": "The scene captures a dynamic environment with multiple objects in motion, including kites, cars, trucks, and sports balls, all moving across the frame with varying speeds and directions. Objects interact within the spatial layout, creating a complex and active visual scenario.",
-      "trajectory_points": 5,
-      "trajectory_source": "track_motion_fallback",
-      "type": "reasoning_summary"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:49281425fec55c96ccdcb706a0f0d362b90b78a6bb4a0cc67f493a808556d93b",
-      "summary": "claim",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:80626d93ae0657f583920adb33085dcb216f6ca7c41106478cf26ed4b247e3e1",
-      "summary": "claim",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:ceda300654100a2e8b92f0e024225f540d520fc26303a1529ef5c9ea35a7459a",
-      "summary": "claim",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:0bbe5bdc3655a55f46c32291d5f7c76325a2b7b2deb57154bb1239225ec60b0b",
-      "summary": "claim",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:b0ecf9b1c4b28e039161f31afef87d8bc9df9150cedaac025cea17f3eb0fe3ea",
-      "summary": "claim",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "nim",
-      "claims": 5,
-      "frame": "urn:sha256:e8c0258428b6d5dfb77d1f4eeee12f1668c4c428463ff773c6c9d27cb4a1c2d4",
-      "no_claim_reason": null,
-      "summary": "The scene depicts a dynamic environment with various objects in motion, including kites, cars, trucks, and sports balls, interacting within the frame. Objects move across the scene with varying speeds and directions, creating a complex spatial arrangement.",
+      "summary": "The scene features a dynamic environment with multiple kites and sports balls in motion, alongside a person and vehicles in the background. Kites are actively flying across the frame, while sports balls appear to be in flight, indicating ongoing activity within the video.",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
@@ -423,93 +506,48 @@
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7423003196716309,
-      "edge": "urn:sha256:7ef409e5011635970481b7f9b5234ae166bdbf98ba170c4a84c731d9101bdec6",
+      "confidence": 0.7427046298980713,
+      "edge": "urn:sha256:b431dd674be0553c166aea84f1594a710e3be7e48e725825fcd27f1be18068bc",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7332776069641114,
-      "edge": "urn:sha256:4c2aa42370cc32c0be046570dca75933f1fc8053c7424871bd923d922ba11658",
+      "confidence": 0.7409513950347901,
+      "edge": "urn:sha256:fa2da757cf0450e2630313f8fa7490937ac4b5d075b42b08442bb0b5a9915f63",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7311127781867981,
-      "edge": "urn:sha256:d6962c18a581ef931ffc14ecb835d00cf3145db0ae4f6b925033188767aebb53",
+      "confidence": 0.7402185916900635,
+      "edge": "urn:sha256:09b5cf7a12ebad0e6a0598555831648d3050054fd71c0cc2a330e5b58041dade",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7239735960960388,
-      "edge": "urn:sha256:fa149351411784daf5646fa0b05d61f0dba99134a910005812ea13ed0ef16026",
+      "confidence": 0.7400838375091553,
+      "edge": "urn:sha256:0ee2696489327be608b8733f52a324c3e7c439ba49ba2a91bf3ca6e026d40526",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
+      "claim_breakdown": {
+        "retrieval_fallback": 4
+      },
       "claim_source": "retrieval_fallback",
+      "claim_sources": [
+        "retrieval_fallback"
+      ],
       "claims": 4,
-      "frame": "urn:sha256:bf0e593ecf90897d15f52bbf66858e65f6812ecc708b380c24f800b99289d3da",
+      "frame": "urn:sha256:dae746e45b803963cd7d0f491e7d519f4edb85f8cc4a4bbededc7bb8214ba69e",
       "no_claim_reason": null,
-      "summary": "The scene captures a dynamic environment with multiple objects in motion, including kites, cars, trucks, and sports balls, all moving across the frame with varying speeds and directions. Objects interact within the spatial layout, creating a complex and active visual scenario.",
-      "trajectory_points": 5,
-      "trajectory_source": "track_motion_fallback",
-      "type": "reasoning_summary"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:887aae6cebae914789d22638e51f3116e0a74f83d75772f4dff6df1384b014e6",
-      "summary": "track",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:fd2e72342ac7b964ec1b53704af181c4473117d0fd920799cb067cb0898569a2",
-      "summary": "track",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:b3782a9a00985cebfa7d1374395cc4a9336d00f243e45c85649c4938c040e66c",
-      "summary": "track",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:39e533e6c5f0c9d3fc4edcb2a3df9dc327889c4519d3d66412164e5612b8d1c1",
-      "summary": "track",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "nim",
-      "confidence": 0.9917974472045898,
-      "edge": "urn:sha256:e43c9512a74ee2182d80d79c38fe65b1009352d15d498a2ea7917921122212a8",
-      "summary": "track",
-      "type": "claim"
-    },
-    {
-      "backend": "nim",
-      "claim_source": "nim",
-      "claims": 5,
-      "frame": "urn:sha256:d0d4fe8eea28e9cdba71de3eb866e0b027b1b341f1db54075c53c4082d12347c",
-      "no_claim_reason": null,
-      "summary": "The scene captures a dynamic environment with multiple objects in motion, including kites, cars, trucks, and sports balls, all moving across the frame with varying speeds and directions. Objects interact within the spatial layout, creating a complex and active visual scenario.",
+      "summary": "The scene captures a dynamic environment with multiple kites and sports balls in motion, along with a person and vehicles in the background. The kites are actively flying across the frame, while the sports balls appear to be in flight, suggesting ongoing activity within the video.",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
@@ -517,54 +555,218 @@
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7248146772384644,
-      "edge": "urn:sha256:390113fd8b95d873f21e6fe237549bcccd9647a1289bd15bc47b5a619a48a331",
+      "confidence": 0.7427433729171753,
+      "edge": "urn:sha256:27c2de8a5f233c3e7f2396f28d3b1411e521a3ca9973ba494aab49799a08f614",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7226797103881837,
-      "edge": "urn:sha256:702617ddc6d502e047a55b3f1c7a7e616eca63cc84eb96b81227638716bf25a8",
+      "confidence": 0.7423573970794678,
+      "edge": "urn:sha256:ee9c8bac252da0c83435807d1fe4a06700dba46c1cf2f27456f50b4979d4d072",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7226114869117737,
-      "edge": "urn:sha256:2f01789bea25e7ce5b1dd02ad6d68262dd03c281c83e5a5d6c88f46975c97ee0",
+      "confidence": 0.7411690115928651,
+      "edge": "urn:sha256:4d2ef728cbccf50bdb151a695a6f4ac29c212adf913f9fe4b4765db01f4fbbc5",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
       "claim_source": "retrieval_fallback",
-      "confidence": 0.7224435687065125,
-      "edge": "urn:sha256:d08498feb378ae85cf4cb6ad7176db3c4a4d5827c3f1e11112d58aad1bf1ab4e",
+      "confidence": 0.740599548816681,
+      "edge": "urn:sha256:563f778eeb197164df0e11ebf6a1fd408ebedf04f61b1d21b1fa03242ef8bff7",
       "summary": "retrieval_near",
       "type": "claim"
     },
     {
       "backend": "nim",
+      "claim_breakdown": {
+        "retrieval_fallback": 4
+      },
       "claim_source": "retrieval_fallback",
+      "claim_sources": [
+        "retrieval_fallback"
+      ],
       "claims": 4,
-      "frame": "urn:sha256:5568eed3d287af168a590d66b357d5ca4523a74f5d236d7291b6cc3613fcffaf",
-      "no_claim_reason": "insufficient_evidence",
-      "summary": "The scene captures a dynamic environment with multiple objects in motion, including kites, cars, trucks, and sports balls, all moving across the frame with varying speeds and directions. Objects interact within the spatial layout, creating a complex and active visual scenario.",
+      "frame": "urn:sha256:f43bffae25b8434efc4bff6bbd1f1be1fff49d87f81e4827348d3273d3a71d05",
+      "no_claim_reason": null,
+      "summary": "The scene depicts a dynamic environment with multiple kites and sports balls in motion, along with a person and vehicles in the background. The kites are actively flying across the frame, while the sports balls appear to be in flight, suggesting ongoing activity within the video.",
+      "trajectory_points": 5,
+      "trajectory_source": "track_motion_fallback",
+      "type": "reasoning_summary"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_fallback",
+      "confidence": 0.7414207696914673,
+      "edge": "urn:sha256:9fd1c33ca9f8a8b4bc4684d2131cc68aca53f082a2bc883b749002f6f97ddd97",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_fallback",
+      "confidence": 0.7395554304122925,
+      "edge": "urn:sha256:87419d69917bc247710662ab51fcd5ed2195c4ef6905d2c082ea18b9b9b51cc7",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_fallback",
+      "confidence": 0.7392753601074219,
+      "edge": "urn:sha256:1a1b791efd08fa165872d17f49e330515675f3bb28f590b9d7c25fce4073dd53",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_fallback",
+      "confidence": 0.7374199390411378,
+      "edge": "urn:sha256:0fbce244f705f7e34d789aa49c5cda5a59968dd6ad236ba1e7cc1e8e6ff0df32",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_breakdown": {
+        "retrieval_fallback": 4
+      },
+      "claim_source": "retrieval_fallback",
+      "claim_sources": [
+        "retrieval_fallback"
+      ],
+      "claims": 4,
+      "frame": "urn:sha256:74c71b1798bd6cbf5519e4399b16a91d19c7f97139e1200ac93c577b5eb8bbab",
+      "no_claim_reason": null,
+      "summary": "The scene shows a dynamic environment with multiple kites and sports balls in motion, along with a person and vehicles in the background. Kites are actively flying across the frame, while sports balls appear to be in flight, indicating ongoing activity within the video.",
+      "trajectory_points": 5,
+      "trajectory_source": "track_motion_fallback",
+      "type": "reasoning_summary"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_fallback",
+      "confidence": 0.7260459184646607,
+      "edge": "urn:sha256:ecb6ee9777cac65a9911b528bcfb49617f2527852439a4d92a31914307ef49c5",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_fallback",
+      "confidence": 0.7112664222717285,
+      "edge": "urn:sha256:99752a527899ee957d1be81298a56fe50100772250a70eeebf3141dc2ca77d12",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_fallback",
+      "confidence": 0.7089625358581544,
+      "edge": "urn:sha256:df8c75947e223b8791bf694a25b5c3745ebfe1cf32f7c4b8d253950dd727db91",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_fallback",
+      "confidence": 0.708903181552887,
+      "edge": "urn:sha256:c732f2aa5745ff71da1d345b5632504a0d43def61ed88426ff71e3d607aef52d",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_breakdown": {
+        "retrieval_fallback": 4
+      },
+      "claim_source": "retrieval_fallback",
+      "claim_sources": [
+        "retrieval_fallback"
+      ],
+      "claims": 4,
+      "frame": "urn:sha256:e19fb96706324a6f5928961740fc4fe3b789868ce90e5c15faf7b70381add74b",
+      "no_claim_reason": null,
+      "summary": "The scene captures a dynamic environment featuring multiple kites and sports balls in motion, along with a person and vehicles in the background. Kites are actively flying across the frame, while sports balls appear to be in flight, suggesting ongoing activity within the video.",
+      "trajectory_points": 5,
+      "trajectory_source": "track_motion_fallback",
+      "type": "reasoning_summary"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_fallback",
+      "confidence": 0.7428189277648927,
+      "edge": "urn:sha256:f85e57b44c1e6d7ec183bd0c03d9bb996b2b27e495dba292c1bb51449c536391",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_fallback",
+      "confidence": 0.7422296047210694,
+      "edge": "urn:sha256:e34805ba148dd8916743c77a02d858f3c5fd5b0ee25b34c2a1f043978d6876d1",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_fallback",
+      "confidence": 0.7421074390411377,
+      "edge": "urn:sha256:1d1174fe94808cc3dbd1442f5e16f30c4486827fbf8d4d4f1e3a9616f2052138",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_source": "retrieval_fallback",
+      "confidence": 0.7413721561431885,
+      "edge": "urn:sha256:d968dc40fcb4992d3977d2f5a0df5caa338e446fd8d68c5b5e77024c484334ce",
+      "summary": "retrieval_near",
+      "type": "claim"
+    },
+    {
+      "backend": "nim",
+      "claim_breakdown": {
+        "retrieval_fallback": 4
+      },
+      "claim_source": "retrieval_fallback",
+      "claim_sources": [
+        "retrieval_fallback"
+      ],
+      "claims": 4,
+      "frame": "urn:sha256:5e765516acfc1a64095c05390742a1a2368d1ebef399773893e3c37d3bd0046c",
+      "no_claim_reason": null,
+      "summary": "The scene features a dynamic environment with multiple kites and sports balls in motion, along with a person and vehicles in the background. Kites are actively flying across the frame, while sports balls appear to be in flight, suggesting ongoing activity within the video.",
       "trajectory_points": 5,
       "trajectory_source": "track_motion_fallback",
       "type": "reasoning_summary"
     }
   ],
+  "input_mp4_path": "data/scratch/balloons.mp4",
   "reasoning_backend": "nim",
   "reasoning_fallbacks": 0,
-  "source_id": "traffic_video",
+  "source_id": "balloons",
   "timing": {
-    "effective_fps": 0.3331021302700484,
-    "elapsed_s": 183.12701858299988,
-    "finished_ns": 1772062488270359766,
-    "started_ns": 1772062305164089188
+    "effective_fps": 0.5440193078441011,
+    "elapsed_s": 148.89177430300333,
+    "finished_ns": 1772397587833897180,
+    "stages_s": {
+      "ann_search_s": 0.18819674100814154,
+      "detector_s": 6.499417508995975,
+      "embedding_s": 7.418770551113994,
+      "io_s": 2.2201906577683985,
+      "kg_write_s": 0.31308409308985574,
+      "reasoning_pipeline_s": 132.21286047400645,
+      "reasoning_s": 131.97412351102685,
+      "tracking_s": 0.22745101802865975
+    },
+    "started_ns": 1772397439244207193
   }
 }

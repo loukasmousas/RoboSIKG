@@ -14,11 +14,14 @@ if TYPE_CHECKING:
     from robosikg.agent.orchestrator import Orchestrator
     from robosikg.config import DemoConfig
 
-DEFAULT_NIM_BASE_URL = os.getenv("ROBOSIKG_NIM_BASE_URL", "http://160.211.47.58:8000/v1")
+from robosikg.ids.source_id import derive_source_id
+
+DEFAULT_NIM_BASE_URL = os.getenv("ROBOSIKG_NIM_BASE_URL", "http://160.211.47.74:8000/v1")
 DEFAULT_MODEL_NAME = os.getenv("ROBOSIKG_MODEL_NAME", "nvidia/cosmos-reason2-8b")
 
 
 def build_config(args: argparse.Namespace):
+    """Build a DemoConfig from CLI arguments."""
     from robosikg.config import DemoConfig
 
     cfg = DemoConfig()
@@ -46,10 +49,11 @@ def build_config(args: argparse.Namespace):
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments for offline demo runs."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--mp4", required=True, help="Path to input MP4 file.")
     ap.add_argument("--out", default="out_demo", help="Output directory for artifacts.")
-    ap.add_argument("--source-id", default="demo_video", help="Deterministic source identifier.")
+    ap.add_argument("--source-id", default="", help="Deterministic source identifier. Empty/auto derives from MP4 name.")
     ap.add_argument("--reasoning-mode", choices=["auto", "nim", "mock"], default="auto")
     ap.add_argument("--device", choices=["cuda", "cpu"], default="cuda")
     ap.add_argument("--pretrained", action=argparse.BooleanOptionalAction, default=True)
@@ -64,13 +68,15 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Execute one pipeline run and print artifact locations."""
     args = parse_args()
     os.makedirs(args.out, exist_ok=True)
 
     cfg = build_config(args)
     from robosikg.agent.orchestrator import Orchestrator
 
-    orch = Orchestrator(cfg=cfg, source_id=args.source_id, out_dir=args.out)
+    source_id = derive_source_id(args.source_id, args.mp4, fallback="demo_video")
+    orch = Orchestrator(cfg=cfg, source_id=source_id, out_dir=args.out)
     summary = orch.run_mp4(args.mp4)
 
     print("Wrote artifacts:", summary["artifacts"])

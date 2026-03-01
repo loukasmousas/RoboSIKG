@@ -21,6 +21,7 @@ from rdflib.term import URIRef
 
 from robosikg.agent.orchestrator import Orchestrator
 from robosikg.config import DemoConfig
+from robosikg.ids.source_id import derive_source_id as derive_source_id_from_path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -33,15 +34,22 @@ RECORDINGS_DIR = PROJECT_ROOT / "out_web_recordings"
 
 
 def _utc_now_iso() -> str:
+    """Return UTC timestamp in ISO-8601 format without microseconds."""
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 
 def _sanitize_filename(name: str) -> str:
+    """Normalize uploaded names to safe local mp4 filenames."""
     base = Path(name).name
     stem = re.sub(r"[^a-zA-Z0-9._-]+", "_", Path(base).stem).strip("._")
     if not stem:
         stem = "upload"
     return f"{stem}.mp4"
+
+
+def _derive_source_id(raw: str | None, mp4_path: Path) -> str:
+    """Resolve source id from request value and mp4 path."""
+    return derive_source_id_from_path(raw, mp4_path, fallback="web_demo")
 
 
 def _short_label(uri: str) -> str:
@@ -359,7 +367,7 @@ def _build_overlay_payload(summary: dict[str, Any]) -> dict[str, Any]:
 
 class RunRequest(BaseModel):
     mp4_path: str = Field(default="data/scratch/traffic.mp4", min_length=1)
-    source_id: str = Field(default="web_demo", min_length=1, max_length=120)
+    source_id: str = Field(default="auto", min_length=1, max_length=120)
     reasoning_mode: Literal["auto", "nim", "mock"] = "nim"
     device: Literal["cuda", "cpu"] = "cuda"
     pretrained: bool = True
@@ -579,6 +587,7 @@ class PipelineService:
     def _run_sync(self, run_id: str, run_dir: Path, req: RunRequest) -> dict[str, Any]:
         cfg = self._build_config(req)
         mp4_path = self._resolve_mp4(req.mp4_path)
+        source_id = _derive_source_id(req.source_id, mp4_path)
         run_dir.mkdir(parents=True, exist_ok=True)
 
         def emit(payload: dict[str, Any]) -> None:
@@ -607,6 +616,7 @@ class PipelineService:
                 "state": "running",
                 "run_id": run_id,
                 "config": {
+                    "source_id": source_id,
                     "reasoning_mode": req.reasoning_mode,
                     "device": req.device,
                     "pretrained": req.pretrained,
@@ -617,7 +627,7 @@ class PipelineService:
             }
         )
 
-        orch = Orchestrator(cfg=cfg, source_id=req.source_id, out_dir=str(run_dir))
+        orch = Orchestrator(cfg=cfg, source_id=source_id, out_dir=str(run_dir))
         return orch.run_mp4(
             str(mp4_path),
             progress_cb=emit,

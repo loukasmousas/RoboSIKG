@@ -13,16 +13,18 @@
 3. `scripts/evaluate.py` produces `eval_report.json`.
 4. CI runs tests on push/PR.
 5. Optional NIM integration steps are documented.
+6. `docs/sparql_query_playbook.md` includes presentation-ready SPARQL examples.
 
 ## Demo Readiness
 
 1. Prepare input MP4 and fixed run command.
+   - For this repo, `data/scratch/traffic.mp4` and `data/scratch/balloons.mp4` are tracked for reproducibility.
 2. Capture one successful run with deterministic outputs.
 3. Highlight:
    - deterministic hashed IDs
    - KG + SPARQL retrieval
    - vector retrieval with routing diagnostics
-   - reasoning output + fallback behavior
+   - reasoning output + fallback/consultant behavior
 
 ## Final Submission Pass
 

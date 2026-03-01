@@ -3,6 +3,7 @@
 Top-level fields:
 
 - `source_id` (`string`): deterministic source identifier from CLI.
+  - Recommended CLI input is `--source-id auto` so the id is derived from MP4 filename.
 - `input_mp4_path` (`string`): MP4 path used as input for the run.
 - `config` (`object`): resolved runtime config used for the run.
 - `reasoning_backend` (`string`): final backend used (`nim`, `mock`, or `mock(auto-fallback)`).
@@ -13,6 +14,15 @@ Top-level fields:
   - `finished_ns` (`integer`)
   - `elapsed_s` (`number`)
   - `effective_fps` (`number`)
+  - `stages_s` (`object`):
+    - `detector_s` (`number`)
+    - `tracking_s` (`number`)
+    - `embedding_s` (`number`)
+    - `reasoning_s` (`number`): model call time only
+    - `reasoning_pipeline_s` (`number`): total reasoning block time
+    - `ann_search_s` (`number`)
+    - `kg_write_s` (`number`)
+    - `io_s` (`number`)
 - `counts` (`object`):
   - `frames_seen` (`integer`)
   - `stopped_early` (`boolean`): true when operator requested stop before ingest completed.
@@ -27,6 +37,8 @@ Top-level fields:
   - `reasoning_avg_claims_per_invocation` (`number`)
   - `reasoning_deterministic_fallback_invocations` (`integer`)
   - `reasoning_deterministic_fallback_claims_total` (`integer`)
+  - `reasoning_consultant_fusion_invocations` (`integer`)
+  - `reasoning_consultant_claims_total` (`integer`)
   - `trajectory_points_total` (`integer`)
   - `reasoning_debug_entries` (`integer`)
   - `kg_triples` (`integer`)
@@ -37,10 +49,18 @@ Top-level fields:
     - `frame` (`string`)
     - `summary` (`string`)
     - `no_claim_reason` (`string|null`)
-    - `claim_source` (`string`)
+    - `claim_source` (`string`): aggregate source for this invocation (`nim`, fallback source, `mixed`, or `none`)
+    - `claim_sources` (`array<string>`): all distinct claim sources used in the invocation
+    - `claim_breakdown` (`object`): per-source claim counts
     - `claims` (`integer`)
     - `trajectory_points` (`integer`)
     - `trajectory_source` (`string`): `nim` or `track_motion_fallback`
+  - `claim` event keys include:
+    - `backend` (`string`)
+    - `claim_source` (`string`): `nim`, `geometric_fallback`, `retrieval_fallback`, `geometric_consultant`, or `retrieval_consultant`
+    - `edge` (`string`)
+    - `summary` (`string`)
+    - `confidence` (`number`)
 - `artifacts` (`object`):
   - `ttl` (`string|null`)
   - `ntriples_sorted` (`string|null`)

@@ -26,6 +26,12 @@ const dom = {
   metricVectors: document.getElementById("metricVectors"),
   metricNodes: document.getElementById("metricNodes"),
   metricEdges: document.getElementById("metricEdges"),
+  perfEffectiveFps: document.getElementById("perfEffectiveFps"),
+  perfDetector: document.getElementById("perfDetector"),
+  perfEmbedder: document.getElementById("perfEmbedder"),
+  perfReasoning: document.getElementById("perfReasoning"),
+  perfIO: document.getElementById("perfIO"),
+  perfReasonInvocations: document.getElementById("perfReasonInvocations"),
   scrubProgress: document.getElementById("scrubProgress"),
   timelinePlay: document.getElementById("timelinePlay"),
   timelineStep: document.getElementById("timelineStep"),
@@ -56,6 +62,7 @@ const dom = {
   layoutBtn: document.getElementById("layoutBtn"),
   refreshGraphBtn: document.getElementById("refreshGraphBtn"),
   copyQueryBtn: document.getElementById("copyQueryBtn"),
+  clearSparqlFocusBtn: document.getElementById("clearSparqlFocusBtn"),
   runQueryBtn: document.getElementById("runQueryBtn"),
   sparqlEditor: document.getElementById("sparqlEditor"),
   overlayMode: document.getElementById("overlayMode"),
@@ -112,6 +119,8 @@ const state = {
     filters: [],
     selectedNodeId: null,
     hitboxes: [],
+    inspectorRequestSeq: 0,
+    queryNodeIds: null,
   },
   metrics: {
     frames_seen: 0,
@@ -132,6 +141,19 @@ const state = {
     fullscreenHintShown: false,
     promotingFullscreen: false,
     nativeFsCandidate: false,
+    queryFocus: null,
+  },
+  chatFilter: {
+    frameUris: null,
+    entityUris: null,
+  },
+  perf: {
+    effectiveFps: null,
+    detectorMsPerFrame: null,
+    embeddingMsPerFrame: null,
+    reasoningMsPerInvocation: null,
+    ioMsPerFrame: null,
+    reasoningInvocations: null,
   },
 };
 
@@ -191,6 +213,87 @@ async function postConsoleAction(action, payload = {}) {
 function clip(text, max = 120) {
   if (!text) return "";
   return text.length > max ? `${text.slice(0, max - 1)}...` : text;
+}
+
+function deriveSourceIdFromPath(path) {
+  const raw = String(path || "").trim();
+  const filename = raw.split("/").pop() || "";
+  const stem = filename.replace(/\.[^.]+$/, "") || "web_demo";
+  const normalized = stem.replace(/[^a-zA-Z0-9._-]+/g, "_").replace(/^[._-]+|[._-]+$/g, "");
+  return normalized || "web_demo";
+}
+
+function maybeAutofillSourceIdFromPath(path) {
+  if (!dom.sourceIdInput) return;
+  const current = String(dom.sourceIdInput.value || "").trim().toLowerCase();
+  if (current && current !== "auto") return;
+  dom.sourceIdInput.value = deriveSourceIdFromPath(path);
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function isIriLike(value) {
+  return typeof value === "string" && /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(value);
+}
+
+function shortUri(value) {
+  const text = String(value || "");
+  if (text.startsWith("urn:sha256:")) {
+    return `#${text.slice(11, 21)}`;
+  }
+  if (text.includes("#")) {
+    return text.split("#").pop() || text;
+  }
+  if (text.includes("/")) {
+    return text.split("/").pop() || text;
+  }
+  return text;
+}
+
+function localName(value) {
+  const text = String(value || "");
+  if (text.includes("#")) return text.split("#").pop() || text;
+  if (text.includes("/")) return text.split("/").pop() || text;
+  return text;
+}
+
+function formatInspectorValue(value, maxLen = 160) {
+  const text = String(value ?? "");
+  return clip(text, maxLen);
+}
+
+function sparqlIri(value) {
+  const text = String(value || "").trim();
+  if (!text) throw new Error("Empty IRI");
+  return `<${text.replaceAll("\\", "\\\\").replaceAll(">", "\\>")}>`;
+}
+
+function rowsToObjects(payload) {
+  const columns = Array.isArray(payload?.columns) ? payload.columns : [];
+  const rows = Array.isArray(payload?.rows) ? payload.rows : [];
+  return rows.map((cells) => {
+    const row = {};
+    columns.forEach((col, idx) => {
+      row[col] = cells[idx] ?? "";
+    });
+    return row;
+  });
+}
+
+async function runInspectorQuery(runId, query, limit = 120) {
+  const out = await apiJSON("/api/sparql/query", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ run_id: runId, query, limit }),
+  });
+  return rowsToObjects(out);
 }
 
 function ts() {
@@ -341,9 +444,16 @@ function pushEvent(message, kind = "event", meta = "") {
   }
 }
 
-function pushChat(role, body, timestamp = ts()) {
+function pushChat(role, body, timestamp = ts(), meta = {}) {
   const row = document.createElement("div");
   row.className = "chat-row";
+  row.dataset.chatRole = String(role || "");
+  if (meta && typeof meta === "object") {
+    if (meta.frameUri) row.dataset.frameUri = String(meta.frameUri);
+    if (Array.isArray(meta.entityUris) && meta.entityUris.length) {
+      row.dataset.entityUris = meta.entityUris.map((v) => String(v)).join("|");
+    }
+  }
   row.innerHTML = `
     <div class="chat-meta">
       <span class="chat-role">${role}</span>
@@ -354,6 +464,50 @@ function pushChat(role, body, timestamp = ts()) {
   dom.chatThread.prepend(row);
   while (dom.chatThread.children.length > 120) {
     dom.chatThread.removeChild(dom.chatThread.lastChild);
+  }
+  applyChatFilter(state.chatFilter.frameUris, state.chatFilter.entityUris);
+}
+
+function intersectsAny(haystackValues, needleSet) {
+  if (!needleSet || !needleSet.size) return true;
+  for (const val of haystackValues) {
+    if (needleSet.has(val)) return true;
+  }
+  return false;
+}
+
+function applyChatFilter(frameUris, entityUris) {
+  state.chatFilter.frameUris = frameUris && frameUris.size ? frameUris : null;
+  state.chatFilter.entityUris = entityUris && entityUris.size ? entityUris : null;
+  const hasFrameFilter = Boolean(state.chatFilter.frameUris && state.chatFilter.frameUris.size);
+  const hasEntityFilter = Boolean(state.chatFilter.entityUris && state.chatFilter.entityUris.size);
+
+  const rows = dom.chatThread ? [...dom.chatThread.children] : [];
+  for (const row of rows) {
+    const role = row.dataset.chatRole || "";
+    if (!hasFrameFilter && !hasEntityFilter) {
+      row.classList.remove("is-hidden");
+      continue;
+    }
+    if (role === "query") {
+      row.classList.remove("is-hidden");
+      continue;
+    }
+
+    const rowFrame = row.dataset.frameUri || "";
+    const rowEntityUris = String(row.dataset.entityUris || "")
+      .split("|")
+      .map((v) => v.trim())
+      .filter(Boolean);
+
+    let visible = true;
+    if (hasFrameFilter) {
+      visible = Boolean(rowFrame && state.chatFilter.frameUris.has(rowFrame));
+    }
+    if (visible && hasEntityFilter && rowEntityUris.length) {
+      visible = intersectsAny(rowEntityUris, state.chatFilter.entityUris);
+    }
+    row.classList.toggle("is-hidden", !visible);
   }
 }
 
@@ -366,6 +520,48 @@ function updateMetrics(patch) {
     const elapsedS = Math.max(0.001, (performance.now() - state.startedAtMs) / 1000);
     dom.chipFps.textContent = (Number(state.metrics.frames_seen || 0) / elapsedS).toFixed(2);
   }
+}
+
+function formatPerfValue(value, suffix = "") {
+  if (!Number.isFinite(Number(value))) return "--";
+  return `${Number(value).toFixed(2)}${suffix}`;
+}
+
+function updatePerfPanel(patch = {}) {
+  state.perf = { ...state.perf, ...patch };
+  if (dom.perfEffectiveFps) dom.perfEffectiveFps.textContent = formatPerfValue(state.perf.effectiveFps);
+  if (dom.perfDetector) dom.perfDetector.textContent = formatPerfValue(state.perf.detectorMsPerFrame, " ms/f");
+  if (dom.perfEmbedder) dom.perfEmbedder.textContent = formatPerfValue(state.perf.embeddingMsPerFrame, " ms/f");
+  if (dom.perfReasoning) dom.perfReasoning.textContent = formatPerfValue(state.perf.reasoningMsPerInvocation, " ms/call");
+  if (dom.perfIO) dom.perfIO.textContent = formatPerfValue(state.perf.ioMsPerFrame, " ms/f");
+  if (dom.perfReasonInvocations) {
+    dom.perfReasonInvocations.textContent = Number.isFinite(Number(state.perf.reasoningInvocations))
+      ? String(Math.round(Number(state.perf.reasoningInvocations)))
+      : "--";
+  }
+}
+
+function applyPerfFromSummary(summary) {
+  const elapsedS = Number(summary?.timing?.elapsed_s);
+  const effectiveFps = Number(summary?.timing?.effective_fps);
+  const counts = summary?.counts || {};
+  const stages = summary?.timing?.stages_s || {};
+  const framesSeen = Number(counts.frames_seen || 0);
+  const reasonCalls = Number(counts.reasoning_invocations || 0);
+
+  const detectorMsPerFrame = framesSeen > 0 ? (1000 * Number(stages.detector_s || 0)) / framesSeen : NaN;
+  const embeddingMsPerFrame = framesSeen > 0 ? (1000 * Number(stages.embedding_s || 0)) / framesSeen : NaN;
+  const reasoningMsPerInvocation = reasonCalls > 0 ? (1000 * Number(stages.reasoning_s || 0)) / reasonCalls : NaN;
+  const ioMsPerFrame = framesSeen > 0 ? (1000 * Number(stages.io_s || 0)) / framesSeen : NaN;
+
+  updatePerfPanel({
+    effectiveFps: Number.isFinite(effectiveFps) ? effectiveFps : framesSeen > 0 && elapsedS > 0 ? framesSeen / elapsedS : NaN,
+    detectorMsPerFrame,
+    embeddingMsPerFrame,
+    reasoningMsPerInvocation,
+    ioMsPerFrame,
+    reasoningInvocations: reasonCalls,
+  });
 }
 
 function updateScrub(framesSeen = 0) {
@@ -387,6 +583,7 @@ function setVideoFromPath(path) {
   dom.videoPreview.src = `/media/${encodeURIComponent(filename)}`;
   dom.videoStage.classList.add("has-video");
   clearVideoLayers();
+  maybeAutofillSourceIdFromPath(p);
 }
 
 function videoFilenameFromPath(path) {
@@ -565,6 +762,13 @@ function findNearestFrameAtOrBefore(sortedFrameKeys, target) {
 }
 
 function syncHistoricalOverlayForCurrentTime() {
+  if (state.overlay.queryFocus && state.overlay.queryFocus.active) {
+    applyOverlayFrameData(state.overlay.queryFocus.frameIndex, {
+      boxes: state.overlay.queryFocus.boxes,
+      tracks: state.overlay.queryFocus.tracks,
+    });
+    return;
+  }
   if (state.running) return;
   const runId = state.overlay.historyRunId;
   if (!runId) return;
@@ -913,7 +1117,7 @@ function relayoutGraph() {
 function resetDashboardView() {
   state.graph.selectedNodeId = null;
   updateNodeInspector(null);
-  drawGraph();
+  clearSparqlFocus(false);
   pushEvent("Dashboard selection reset", "ui");
 }
 
@@ -1009,8 +1213,12 @@ function relaxLayout(nodes, edges, positions, width, height) {
 }
 
 function visibleNodes() {
-  if (!state.graph.hiddenGroups.size) return state.graph.nodes;
-  return state.graph.nodes.filter((n) => !state.graph.hiddenGroups.has(n.group));
+  let nodes = state.graph.nodes;
+  if (state.graph.queryNodeIds && state.graph.queryNodeIds.size) {
+    nodes = nodes.filter((n) => state.graph.queryNodeIds.has(n.id));
+  }
+  if (!state.graph.hiddenGroups.size) return nodes;
+  return nodes.filter((n) => !state.graph.hiddenGroups.has(n.group));
 }
 
 function visibleEdges(nodeSet) {
@@ -1141,38 +1349,282 @@ function rebuildFilters() {
   }
 }
 
-function updateNodeInspector(node) {
-  if (!node) {
-    dom.nodeSummary.innerHTML = `
-      <div class="summary-title">Select a graph node</div>
-      <div class="summary-meta">Type and properties will appear here.</div>
-    `;
-    dom.nodeProps.innerHTML = "";
-    return;
-  }
-
-  dom.nodeSummary.innerHTML = `
-    <div class="summary-title">${node.label}</div>
-    <div class="summary-meta">Type: ${node.group}${node.cls ? ` · Class: ${node.cls}` : ""}</div>
-  `;
-
-  const rows = [
-    ["id", node.id],
-    ["short_id", node.short_id || ""],
-    ["label", node.label],
-    ["group", node.group],
-    ["cls", node.cls || ""],
-  ];
+function renderNodeProps(rows) {
   dom.nodeProps.innerHTML = rows
     .map(
-      ([k, v]) => `
+      ([key, value]) => `
         <div class="prop-row">
-          <div class="prop-key">${k}</div>
-          <div class="prop-value">${v}</div>
+          <div class="prop-key">${escapeHtml(key)}</div>
+          <div class="prop-value">${escapeHtml(value)}</div>
         </div>
       `
     )
     .join("");
+}
+
+function renderNodeSummary(title, meta) {
+  dom.nodeSummary.innerHTML = `
+    <div class="summary-title">${escapeHtml(title)}</div>
+    <div class="summary-meta">${escapeHtml(meta)}</div>
+  `;
+}
+
+function relationCount(relMap) {
+  let total = 0;
+  for (const values of relMap.values()) {
+    total += values.length;
+  }
+  return total;
+}
+
+function summarizePredicateMix(relMap, maxPredicates = 6) {
+  const rows = [...relMap.entries()].map(([pred, values]) => [pred, values.length]);
+  rows.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  return rows
+    .slice(0, maxPredicates)
+    .map(([pred, count]) => `${pred}(${count})`)
+    .join(", ");
+}
+
+function summarizeRelationTargets(relMap, predicate, maxItems = 4) {
+  const values = relMap.get(predicate) || [];
+  if (!values.length) return "";
+  const shown = values.slice(0, maxItems).map((v) => shortUri(v));
+  const suffix = values.length > maxItems ? ` +${values.length - maxItems} more` : "";
+  return `${shown.join(", ")}${suffix}`;
+}
+
+function confidenceSummary(confidenceRows, dir) {
+  const values = confidenceRows
+    .filter((row) => row.dir === dir && Number.isFinite(row.confidence))
+    .map((row) => Number(row.confidence));
+  if (!values.length) return "";
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const avg = values.reduce((a, b) => a + b, 0) / values.length;
+  return `avg ${avg.toFixed(3)} | min ${min.toFixed(3)} | max ${max.toFixed(3)}`;
+}
+
+function topConfidenceEdges(confidenceRows, dir, maxItems = 4) {
+  const rows = confidenceRows
+    .filter((row) => row.dir === dir && Number.isFinite(row.confidence))
+    .sort((a, b) => b.confidence - a.confidence);
+  if (!rows.length) return "";
+  return rows
+    .slice(0, maxItems)
+    .map((row) => `${row.predicate}->${shortUri(row.other)} (${row.confidence.toFixed(3)})`)
+    .join(", ");
+}
+
+async function fetchNodeInspectorDetails(runId, nodeId) {
+  const iri = sparqlIri(nodeId);
+  const prefix = "PREFIX kg: <https://example.org/robosikg#>\n";
+
+  const outgoingQuery = `${prefix}
+SELECT ?p ?o
+WHERE {
+  ${iri} ?p ?o .
+}
+LIMIT 180`;
+
+  const incomingQuery = `${prefix}
+SELECT ?s ?p
+WHERE {
+  ?s ?p ${iri} .
+}
+LIMIT 180`;
+
+  const confidenceQuery = `${prefix}
+SELECT ?dir ?pred ?other ?confidence
+WHERE {
+  {
+    BIND("out" AS ?dir)
+    ?edge a kg:Edge ;
+          kg:edgeSubject ${iri} ;
+          kg:edgePredicate ?pred ;
+          kg:edgeObject ?other ;
+          kg:edgeConfidence ?confidence .
+  }
+  UNION
+  {
+    BIND("in" AS ?dir)
+    ?edge a kg:Edge ;
+          kg:edgeSubject ?other ;
+          kg:edgePredicate ?pred ;
+          kg:edgeObject ${iri} ;
+          kg:edgeConfidence ?confidence .
+  }
+}
+LIMIT 120`;
+
+  const [outgoingRows, incomingRows, confidenceRowsRaw] = await Promise.all([
+    runInspectorQuery(runId, outgoingQuery, 180),
+    runInspectorQuery(runId, incomingQuery, 180),
+    runInspectorQuery(runId, confidenceQuery, 120),
+  ]);
+
+  const literalProps = new Map();
+  const outgoingRelations = new Map();
+  for (const row of outgoingRows) {
+    const pred = localName(row.p || "");
+    const obj = String(row.o || "");
+    if (!pred || !obj) continue;
+    if (isIriLike(obj)) {
+      const values = outgoingRelations.get(pred) || [];
+      values.push(obj);
+      outgoingRelations.set(pred, values);
+    } else {
+      const values = literalProps.get(pred) || [];
+      values.push(obj);
+      literalProps.set(pred, values);
+    }
+  }
+
+  const incomingRelations = new Map();
+  for (const row of incomingRows) {
+    const pred = localName(row.p || "");
+    const subj = String(row.s || "");
+    if (!pred || !subj) continue;
+    const values = incomingRelations.get(pred) || [];
+    values.push(subj);
+    incomingRelations.set(pred, values);
+  }
+
+  const confidenceRows = confidenceRowsRaw
+    .map((row) => {
+      const confidence = Number(row.confidence);
+      return {
+        dir: String(row.dir || ""),
+        predicate: localName(row.pred || ""),
+        other: String(row.other || ""),
+        confidence: Number.isFinite(confidence) ? confidence : NaN,
+      };
+    })
+    .filter((row) => row.dir && row.predicate && row.other && Number.isFinite(row.confidence));
+
+  return { literalProps, outgoingRelations, incomingRelations, confidenceRows };
+}
+
+function buildInspectorRows(node, details, status) {
+  const rows = [
+    ["id", formatInspectorValue(node.id, 180)],
+    ["short_id", node.short_id || shortUri(node.id)],
+    ["label", formatInspectorValue(node.label, 120)],
+    ["group", node.group || "Entity"],
+  ];
+  if (node.cls) {
+    rows.push(["cls", node.cls]);
+  }
+
+  if (status.loading) {
+    rows.push(["inspector_status", "Loading graph details..."]);
+    return rows;
+  }
+
+  if (status.error) {
+    rows.push(["inspector_status", formatInspectorValue(status.error, 140)]);
+    return rows;
+  }
+
+  if (!details) {
+    return rows;
+  }
+
+  const { literalProps, outgoingRelations, incomingRelations, confidenceRows } = details;
+  const one = (key) => {
+    const values = literalProps.get(key) || [];
+    return values.length ? values[0] : "";
+  };
+
+  const frameIndex = one("frameIndex");
+  const timeNs = one("timeNs");
+  const sourceId = one("sourceId");
+  const score = one("score");
+  const edgeConfidence = one("edgeConfidence");
+  const bboxX1 = one("bboxX1");
+  const bboxY1 = one("bboxY1");
+  const bboxX2 = one("bboxX2");
+  const bboxY2 = one("bboxY2");
+
+  if (sourceId) rows.push(["source_id", sourceId]);
+  if (frameIndex) rows.push(["frame_index", frameIndex]);
+  if (timeNs) rows.push(["time_ns", timeNs]);
+  if (score) rows.push(["score", score]);
+  if (edgeConfidence) rows.push(["edge_confidence", edgeConfidence]);
+  if (bboxX1 && bboxY1 && bboxX2 && bboxY2) {
+    rows.push(["bbox_xyxy", `${bboxX1}, ${bboxY1}, ${bboxX2}, ${bboxY2}`]);
+  }
+
+  const outCount = relationCount(outgoingRelations);
+  const inCount = relationCount(incomingRelations);
+  rows.push(["out_relations", String(outCount)]);
+  rows.push(["in_relations", String(inCount)]);
+
+  const outMix = summarizePredicateMix(outgoingRelations);
+  if (outMix) rows.push(["out_predicates", outMix]);
+  const inMix = summarizePredicateMix(incomingRelations);
+  if (inMix) rows.push(["in_predicates", inMix]);
+
+  const nearTo = summarizeRelationTargets(outgoingRelations, "near");
+  if (nearTo) rows.push(["near_to", nearTo]);
+  const nearFrom = summarizeRelationTargets(incomingRelations, "near");
+  if (nearFrom) rows.push(["near_from", nearFrom]);
+  const insideOf = summarizeRelationTargets(outgoingRelations, "inside");
+  if (insideOf) rows.push(["inside_of", insideOf]);
+  const contains = summarizeRelationTargets(incomingRelations, "inside");
+  if (contains) rows.push(["contains", contains]);
+  const overlaps = summarizeRelationTargets(outgoingRelations, "overlaps");
+  if (overlaps) rows.push(["overlaps_with", overlaps]);
+  const trackParent = summarizeRelationTargets(outgoingRelations, "trackOf");
+  if (trackParent) rows.push(["parent_track", trackParent]);
+  const trackChildren = summarizeRelationTargets(incomingRelations, "trackOf");
+  if (trackChildren) rows.push(["child_nodes", trackChildren]);
+  const seenIn = summarizeRelationTargets(outgoingRelations, "seenIn");
+  if (seenIn) rows.push(["seen_in", seenIn]);
+
+  const outConfidence = confidenceSummary(confidenceRows, "out");
+  if (outConfidence) rows.push(["confidence_out", outConfidence]);
+  const inConfidence = confidenceSummary(confidenceRows, "in");
+  if (inConfidence) rows.push(["confidence_in", inConfidence]);
+
+  const topOut = topConfidenceEdges(confidenceRows, "out");
+  if (topOut) rows.push(["top_conf_out", topOut]);
+  const topIn = topConfidenceEdges(confidenceRows, "in");
+  if (topIn) rows.push(["top_conf_in", topIn]);
+
+  return rows;
+}
+
+function updateNodeInspector(node) {
+  state.graph.inspectorRequestSeq += 1;
+  const requestSeq = state.graph.inspectorRequestSeq;
+
+  if (!node) {
+    renderNodeSummary("Select a graph node", "Type and properties will appear here.");
+    renderNodeProps([]);
+    return;
+  }
+
+  renderNodeSummary(node.label || shortUri(node.id), `Type: ${node.group}${node.cls ? ` · Class: ${node.cls}` : ""}`);
+  renderNodeProps(buildInspectorRows(node, null, { loading: true }));
+
+  const runId = state.selectedRunId || dom.runSelect.value;
+  if (!runId) {
+    renderNodeProps(buildInspectorRows(node, null, { error: "Select a run to inspect graph details." }));
+    return;
+  }
+
+  fetchNodeInspectorDetails(runId, node.id)
+    .then((details) => {
+      if (requestSeq !== state.graph.inspectorRequestSeq) return;
+      if (state.graph.selectedNodeId !== node.id) return;
+      renderNodeProps(buildInspectorRows(node, details, {}));
+    })
+    .catch((err) => {
+      if (requestSeq !== state.graph.inspectorRequestSeq) return;
+      if (state.graph.selectedNodeId !== node.id) return;
+      renderNodeProps(buildInspectorRows(node, null, { error: `Inspector query failed: ${err.message}` }));
+    });
 }
 
 function installGraphInteractions() {
@@ -1213,6 +1665,9 @@ async function refreshRuns(preferredRun = null) {
 async function loadRun(runId) {
   if (!runId) return;
   state.selectedRunId = runId;
+  state.graph.queryNodeIds = null;
+  state.overlay.queryFocus = null;
+  applyChatFilter(null, null);
   applyTrajectoryPoints([]);
   const [summary, graph] = await Promise.all([
     apiJSON(`/api/runs/${encodeURIComponent(runId)}`),
@@ -1228,6 +1683,8 @@ async function loadRun(runId) {
   state.graph.nodes = graph.nodes || [];
   state.graph.edges = graph.edges || [];
   state.graph.positions = new Map();
+  state.graph.selectedNodeId = null;
+  updateNodeInspector(null);
   rebuildFilters();
   drawGraph();
 
@@ -1237,6 +1694,7 @@ async function loadRun(runId) {
     regions_added: counts.regions_added || 0,
     vector_items: counts.vector_items || 0,
   });
+  applyPerfFromSummary(summary);
   updateScrub(counts.frames_seen || 0);
   dom.overlayMode.textContent = summary?.config?.reasoning?.mode || "?";
   dom.overlayDevice.textContent = summary?.config?.perception?.device || "?";
@@ -1247,7 +1705,7 @@ async function loadRun(runId) {
   const events = summary.events || [];
   for (const event of events.slice(-8)) {
     if (event.type === "reasoning_summary") {
-      pushChat("reasoner", clip(event.summary || "", 260));
+      pushChat("reasoner", clip(event.summary || "", 260), ts(), { frameUri: event.frame || "" });
     }
   }
 }
@@ -1260,6 +1718,287 @@ async function exportSelectedRun() {
   const out = await apiJSON(`/api/runs/${encodeURIComponent(state.selectedRunId)}/export`, { method: "POST" });
   pushEvent(`Exported ${out.archive_path}`, "export", `${out.size_bytes} bytes`);
   pushChat("export", `Bundle ready: ${out.archive_path} (${(out.files || []).join(", ")})`);
+}
+
+function parseFrameHint(columnName, cellValue) {
+  const col = String(columnName || "").toLowerCase();
+  const val = String(cellValue || "").trim();
+  if (!val) return null;
+  if (!col.includes("frame")) return null;
+  const n = Number(val);
+  if (!Number.isFinite(n)) return null;
+  return Math.floor(n);
+}
+
+function extractSparqlContext(columns, rows) {
+  const entityUris = new Set();
+  const frameUris = new Set();
+  const frameIndices = new Set();
+  let hasExplicitFrameBinding = false;
+  let firstFrameIndex = null;
+  for (const row of rows || []) {
+    if (!Array.isArray(row)) continue;
+    for (let i = 0; i < columns.length; i += 1) {
+      const col = columns[i] || "";
+      const isFrameCol = String(col).toLowerCase().includes("frame");
+      const raw = String(row[i] ?? "").trim();
+      if (!raw) continue;
+      const frameHint = parseFrameHint(col, raw);
+      if (frameHint !== null) {
+        frameIndices.add(frameHint);
+        hasExplicitFrameBinding = true;
+        if (firstFrameIndex === null) {
+          firstFrameIndex = frameHint;
+        }
+      }
+      if (isIriLike(raw)) {
+        entityUris.add(raw);
+        if (isFrameCol) {
+          frameUris.add(raw);
+          hasExplicitFrameBinding = true;
+        }
+      } else if (isFrameCol) {
+        hasExplicitFrameBinding = true;
+      }
+    }
+  }
+  return { entityUris, frameUris, frameIndices, hasExplicitFrameBinding, firstFrameIndex };
+}
+
+function parseFiniteNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function addUniqueByKey(map, frameIdx, item, keyFn) {
+  const list = map.get(frameIdx) || [];
+  const itemKey = keyFn(item);
+  if (!list.some((row) => keyFn(row) === itemKey)) {
+    list.push(item);
+    map.set(frameIdx, list);
+  }
+}
+
+function addOverlayBox(map, frameIdx, box) {
+  addUniqueByKey(map, frameIdx, box, (row) => `${row.bbox.join(",")}::${row.cls || ""}`);
+}
+
+function addOverlayTrack(map, frameIdx, track) {
+  addUniqueByKey(map, frameIdx, track, (row) => `${row.track_id}::${row.bbox.join(",")}::${row.cls || ""}`);
+}
+
+function mergeResolvedRow(target, row) {
+  const uri = String(row.uri || "").trim();
+  const frameUri = String(row.frameUri || "").trim();
+  const trackUri = String(row.track || "").trim();
+  const frameIdx = parseFiniteNumber(row.frameIdx);
+  const cls = String(row.cls || "").trim() || "obj";
+  const score = parseFiniteNumber(row.score);
+  const x1 = parseFiniteNumber(row.x1);
+  const y1 = parseFiniteNumber(row.y1);
+  const x2 = parseFiniteNumber(row.x2);
+  const y2 = parseFiniteNumber(row.y2);
+
+  if (uri) target.nodeIds.add(uri);
+  if (frameUri) {
+    target.frameUris.add(frameUri);
+    target.nodeIds.add(frameUri);
+  }
+  if (trackUri) target.nodeIds.add(trackUri);
+  if (frameIdx !== null) target.frameIndices.add(frameIdx);
+  if (uri && frameUri) target.entityUrisByFrameUri.set(uri, frameUri);
+
+  if (frameIdx === null) return;
+  if (x1 === null || y1 === null || x2 === null || y2 === null) return;
+  addOverlayBox(target.boxesByFrame, frameIdx, {
+    bbox: [x1, y1, x2, y2],
+    cls,
+    score,
+  });
+  if (trackUri) {
+    addOverlayTrack(target.tracksByFrame, frameIdx, {
+      track_id: shortUri(trackUri).replace(/^#/, ""),
+      bbox: [x1, y1, x2, y2],
+      cls,
+    });
+  }
+}
+
+async function resolveSparqlVisualTargets(runId, context) {
+  const uriList = [...context.entityUris].slice(0, 80);
+  const graphNodeById = new Map((state.graph.nodes || []).map((n) => [n.id, n]));
+  const trackUris = uriList.filter((uri) => {
+    const node = graphNodeById.get(uri);
+    return Boolean(node && String(node.group || "").toLowerCase().includes("track"));
+  });
+
+  const target = {
+    nodeIds: new Set(uriList),
+    frameIndices: new Set(context.frameIndices),
+    frameUris: new Set(context.frameUris),
+    boxesByFrame: new Map(),
+    tracksByFrame: new Map(),
+    entityUrisByFrameUri: new Map(),
+  };
+
+  if (uriList.length) {
+    const values = uriList.map((u) => sparqlIri(u)).join(" ");
+    const query = `
+PREFIX kg: <https://example.org/robosikg#>
+SELECT ?uri ?frameUri ?frameIdx ?cls ?score ?x1 ?y1 ?x2 ?y2 ?track
+WHERE {
+  VALUES ?uri { ${values} }
+  OPTIONAL {
+    ?uri kg:seenIn ?frameUri .
+    ?frameUri kg:frameIndex ?frameIdx .
+    OPTIONAL { ?uri kg:cls ?cls }
+    OPTIONAL { ?uri kg:score ?score }
+    OPTIONAL {
+      ?uri kg:bboxX1 ?x1 ;
+           kg:bboxY1 ?y1 ;
+           kg:bboxX2 ?x2 ;
+           kg:bboxY2 ?y2 .
+    }
+    OPTIONAL { ?uri kg:trackOf ?track }
+  }
+  OPTIONAL {
+    ?uri kg:frameIndex ?frameIdxSelf .
+    BIND(?uri AS ?frameUriSelf)
+  }
+  BIND(COALESCE(?frameUri, ?frameUriSelf) AS ?frameUri)
+  BIND(COALESCE(?frameIdx, ?frameIdxSelf) AS ?frameIdx)
+}
+LIMIT 500`;
+    const rows = await runInspectorQuery(runId, query, 500);
+    rows.forEach((row) => mergeResolvedRow(target, row));
+  }
+
+  if (trackUris.length) {
+    const values = trackUris.slice(0, 40).map((u) => sparqlIri(u)).join(" ");
+    const trackQuery = `
+PREFIX kg: <https://example.org/robosikg#>
+SELECT ?uri ?frameUri ?frameIdx ?cls ?score ?x1 ?y1 ?x2 ?y2 ?track
+WHERE {
+  VALUES ?track { ${values} }
+  ?uri kg:trackOf ?track ;
+       kg:seenIn ?frameUri .
+  ?frameUri kg:frameIndex ?frameIdx .
+  OPTIONAL { ?uri kg:cls ?cls }
+  OPTIONAL { ?uri kg:score ?score }
+  OPTIONAL {
+    ?uri kg:bboxX1 ?x1 ;
+         kg:bboxY1 ?y1 ;
+         kg:bboxX2 ?x2 ;
+         kg:bboxY2 ?y2 .
+  }
+}
+LIMIT 500`;
+    const rows = await runInspectorQuery(runId, trackQuery, 500);
+    rows.forEach((row) => mergeResolvedRow(target, row));
+  }
+
+  return target;
+}
+
+function overlayPackForSelectedRun() {
+  const runId = state.overlay.historyRunId || state.selectedRunId;
+  if (!runId) return null;
+  return state.overlay.historyByRun.get(runId) || null;
+}
+
+function estimateSourceFps(pack) {
+  if (!pack) return null;
+  const sampleFps = Math.max(0.001, Number(state.overlay.historySampleFps || 5));
+  const step = Math.max(1, Number(pack.frameStep || 1));
+  return Math.max(0.001, Number(pack.sourceFpsGuess || sampleFps), step * sampleFps);
+}
+
+function seekVideoToFrame(frameIndex) {
+  const pack = overlayPackForSelectedRun();
+  const sourceFps = estimateSourceFps(pack);
+  if (!Number.isFinite(sourceFps) || sourceFps <= 0) return;
+  if (!dom.videoPreview) return;
+  const t = Math.max(0, Number(frameIndex) / sourceFps);
+  if (Number.isFinite(t)) {
+    dom.videoPreview.currentTime = t;
+  }
+}
+
+function clearSparqlFocus(pushNotice = false) {
+  state.graph.queryNodeIds = null;
+  state.overlay.queryFocus = null;
+  applyChatFilter(null, null);
+  drawGraph();
+  syncHistoricalOverlayForCurrentTime();
+  if (pushNotice) {
+    pushEvent("SPARQL focus cleared", "query");
+  }
+}
+
+async function applySparqlFocus(runId, out) {
+  const columns = Array.isArray(out?.columns) ? out.columns : [];
+  const rows = Array.isArray(out?.rows) ? out.rows : [];
+  if (!rows.length) {
+    clearSparqlFocus(true);
+    return;
+  }
+
+  const context = extractSparqlContext(columns, rows);
+  if (!context.entityUris.size && !context.frameUris.size && !context.frameIndices.size) {
+    clearSparqlFocus(false);
+    pushEvent("SPARQL returned rows but no URI/frame bindings to focus", "query");
+    return;
+  }
+
+  const resolved = await resolveSparqlVisualTargets(runId, context);
+  const nodeFilter = resolved.nodeIds.size ? resolved.nodeIds : null;
+  state.graph.queryNodeIds = nodeFilter;
+  if (state.graph.selectedNodeId && nodeFilter && !nodeFilter.has(state.graph.selectedNodeId)) {
+    state.graph.selectedNodeId = null;
+    updateNodeInspector(null);
+  }
+  drawGraph();
+
+  applyChatFilter(resolved.frameUris, resolved.nodeIds);
+
+  const frameCandidates = context.hasExplicitFrameBinding
+    ? [...resolved.frameIndices].filter((n) => Number.isFinite(n))
+    : [];
+  const frameIndex = Number.isFinite(Number(context.firstFrameIndex))
+    ? Number(context.firstFrameIndex)
+    : frameCandidates.length
+      ? frameCandidates[0]
+      : null;
+  if (context.hasExplicitFrameBinding && frameIndex !== null) {
+    const pack = overlayPackForSelectedRun();
+    const historyData = pack?.frameMap?.get(String(frameIndex)) || { boxes: [], tracks: [] };
+    const boxes = resolved.boxesByFrame.get(frameIndex) || historyData.boxes || [];
+    const tracks = resolved.tracksByFrame.get(frameIndex) || historyData.tracks || [];
+    state.overlay.queryFocus = {
+      active: true,
+      frameIndex,
+      boxes,
+      tracks,
+    };
+    seekVideoToFrame(frameIndex);
+    applyOverlayFrameData(frameIndex, { boxes, tracks });
+    pushEvent(`SPARQL focus applied to frame ${frameIndex}`, "query");
+  } else {
+    state.overlay.queryFocus = null;
+    pushEvent(
+      context.hasExplicitFrameBinding
+        ? "SPARQL focus applied (graph/chat), frame index could not be resolved"
+        : "SPARQL focus applied (graph/chat), no explicit frame binding in query",
+      "query"
+    );
+  }
+
+  const urisPreview = [...resolved.nodeIds].slice(0, 8);
+  const previewBody = urisPreview.length ? `Focused URIs: ${urisPreview.map((u) => shortUri(u)).join(", ")}` : "Focus applied.";
+  pushChat("query", previewBody, ts(), {
+    frameUri: [...resolved.frameUris][0] || "",
+    entityUris: urisPreview,
+  });
 }
 
 async function runSparqlEditorQuery() {
@@ -1289,12 +2028,14 @@ async function runSparqlEditorQuery() {
       ? `<pre>${clip((out.columns || []).join(" | "), 240)}\n${clip(previewRows, 1200)}</pre>`
       : "No rows returned."
   );
+  await applySparqlFocus(runId, out);
 }
 
 async function startRun() {
+  clearSparqlFocus(false);
   const payload = {
     mp4_path: dom.mp4PathInput.value.trim(),
-    source_id: dom.sourceIdInput.value.trim() || "web_demo",
+    source_id: dom.sourceIdInput.value.trim() || "auto",
     reasoning_mode: dom.reasoningModeInput.value,
     device: dom.deviceInput.value,
     pretrained: dom.pretrainedInput.checked,
@@ -1356,7 +2097,7 @@ function handleRunEvent(evt) {
     const summary = clip(evt.summary || "(empty summary)", 220);
     pushEvent(`Reasoning ${evt.backend} · ${evt.claims} claims`, "reasoning");
     applyTrajectoryPoints(evt.trajectory_2d_norm_0_1000);
-    pushChat("reasoner", summary);
+    pushChat("reasoner", summary, ts(), { frameUri: evt.frame_uri || "" });
     return;
   }
 
@@ -1561,6 +2302,7 @@ function bindUI() {
   bindButton(dom.runQueryBtn, () => {
     runSparqlEditorQuery().catch((err) => pushChat("error", `SPARQL query failed: ${err.message}`));
   });
+  bindButton(dom.clearSparqlFocusBtn, () => clearSparqlFocus(true));
 
   bindEvent(window, "resize", () => drawGraph());
   bindEvent(window, "resize", () => drawVideoLayers());

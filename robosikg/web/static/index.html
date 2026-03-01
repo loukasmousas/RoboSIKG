@@ -104,6 +104,17 @@
                 <span id="runStateBadge" class="badge idle">Idle</span>
               </div>
               <ul id="eventFeed" class="event-feed"></ul>
+              <div class="perf-panel">
+                <div class="perf-head">Performance Profile</div>
+                <div class="perf-grid">
+                  <div class="perf-row"><span>Effective FPS</span><strong id="perfEffectiveFps">--</strong></div>
+                  <div class="perf-row"><span>Detector</span><strong id="perfDetector">--</strong></div>
+                  <div class="perf-row"><span>Embedding</span><strong id="perfEmbedder">--</strong></div>
+                  <div class="perf-row"><span>Reasoning</span><strong id="perfReasoning">--</strong></div>
+                  <div class="perf-row"><span>I/O + bookkeeping</span><strong id="perfIO">--</strong></div>
+                  <div class="perf-row"><span>Reason calls</span><strong id="perfReasonInvocations">--</strong></div>
+                </div>
+              </div>
             </aside>
           </div>
         </section>
@@ -150,62 +161,64 @@
             <h2>Operator Instruction</h2>
           </header>
 
-          <textarea id="instructionInput" class="instruction-box" rows="3">Inspect the next 10 seconds. Build scene graph. Identify hazards. Suggest safe action.</textarea>
+          <div class="instruction-body">
+            <textarea id="instructionInput" class="instruction-box" rows="3">Inspect the next 10 seconds. Build scene graph. Identify hazards. Suggest safe action.</textarea>
 
-          <div class="field-grid">
-            <label class="field">
-              <span>MP4 path</span>
-              <input id="mp4PathInput" type="text" value="data/scratch/traffic.mp4">
-            </label>
-            <div class="field button-field">
-              <span>Upload MP4</span>
-              <button id="uploadBtn" class="btn ghost">Upload</button>
-              <input id="uploadInput" type="file" accept="video/mp4" hidden>
+            <div class="field-grid">
+              <label class="field">
+                <span>MP4 path</span>
+                <input id="mp4PathInput" type="text" value="data/scratch/traffic.mp4">
+              </label>
+              <div class="field button-field">
+                <span>Upload MP4</span>
+                <button id="uploadBtn" class="btn ghost">Upload</button>
+                <input id="uploadInput" type="file" accept="video/mp4" hidden>
+              </div>
+              <label class="field">
+                <span>Source ID</span>
+                <input id="sourceIdInput" type="text" value="auto">
+              </label>
+              <label class="field">
+                <span>Reasoning Mode</span>
+                <select id="reasoningModeInput" class="select">
+                  <option value="nim">nim</option>
+                  <option value="auto">auto</option>
+                  <option value="mock">mock</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Device</span>
+                <select id="deviceInput" class="select">
+                  <option value="cuda">cuda</option>
+                  <option value="cpu">cpu</option>
+                </select>
+              </label>
+              <label class="field checkbox-field">
+                <span>Pretrained</span>
+                <input id="pretrainedInput" type="checkbox" checked>
+              </label>
+              <label class="field">
+                <span>Sample FPS</span>
+                <input id="sampleFpsInput" type="number" step="0.5" min="0.5" max="60" value="5">
+              </label>
+              <label class="field">
+                <span>Max frames</span>
+                <input id="maxFramesInput" type="number" min="1" max="5000" value="300">
+              </label>
+              <label class="field">
+                <span>Reason every N</span>
+                <input id="reasonEveryInput" type="number" min="0" max="1000" value="25">
+              </label>
             </div>
-            <label class="field">
-              <span>Source ID</span>
-              <input id="sourceIdInput" type="text" value="web_demo">
-            </label>
-            <label class="field">
-              <span>Reasoning Mode</span>
-              <select id="reasoningModeInput" class="select">
-                <option value="nim">nim</option>
-                <option value="auto">auto</option>
-                <option value="mock">mock</option>
-              </select>
-            </label>
-            <label class="field">
-              <span>Device</span>
-              <select id="deviceInput" class="select">
-                <option value="cuda">cuda</option>
-                <option value="cpu">cpu</option>
-              </select>
-            </label>
-            <label class="field checkbox-field">
-              <span>Pretrained</span>
-              <input id="pretrainedInput" type="checkbox" checked>
-            </label>
-            <label class="field">
-              <span>Sample FPS</span>
-              <input id="sampleFpsInput" type="number" step="0.5" min="0.5" max="60" value="5">
-            </label>
-            <label class="field">
-              <span>Max frames</span>
-              <input id="maxFramesInput" type="number" min="1" max="5000" value="300">
-            </label>
-            <label class="field">
-              <span>Reason every N</span>
-              <input id="reasonEveryInput" type="number" min="0" max="1000" value="25">
-            </label>
-          </div>
 
-          <div class="toggle-row">
-            <button id="moduleVisionBtn" class="pill active">Vision</button>
-            <button id="moduleSlamBtn" class="pill active">SLAM</button>
-            <button id="moduleLlmBtn" class="pill active">LLM</button>
-          </div>
+            <div class="toggle-row">
+              <button id="moduleVisionBtn" class="pill active">Vision</button>
+              <button id="moduleSlamBtn" class="pill active">SLAM</button>
+              <button id="moduleLlmBtn" class="pill active">LLM</button>
+            </div>
 
-          <button id="runBtn" class="btn primary">Run Pipeline</button>
+            <button id="runBtn" class="btn primary">Run Pipeline</button>
+          </div>
         </section>
 
         <section class="panel chat-panel reveal delay-3">
@@ -220,19 +233,22 @@
             <h2>Node Inspector</h2>
             <span class="accent">SPARQL</span>
           </header>
-          <div id="nodeSummary" class="node-summary">
-            <div class="summary-title">Select a graph node</div>
-            <div class="summary-meta">Type and properties will appear here.</div>
-          </div>
-          <div id="nodeProps" class="properties-table"></div>
-          <label class="field mono-field">
-            <span>Query Editor</span>
-            <textarea id="sparqlEditor" class="mono" rows="4">PREFIX kg: &lt;https://example.org/robosikg#&gt;
+          <div class="inspector-body">
+            <div id="nodeSummary" class="node-summary">
+              <div class="summary-title">Select a graph node</div>
+              <div class="summary-meta">Type and properties will appear here.</div>
+            </div>
+            <div id="nodeProps" class="properties-table"></div>
+            <label class="field mono-field">
+              <span>Query Editor</span>
+              <textarea id="sparqlEditor" class="mono" rows="4">PREFIX kg: &lt;https://example.org/robosikg#&gt;
 SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 25</textarea>
-          </label>
-          <div class="panel-actions">
-            <button id="copyQueryBtn" class="btn ghost small">Copy</button>
-            <button id="runQueryBtn" class="btn ghost small">Run</button>
+            </label>
+            <div class="panel-actions inspector-actions">
+              <button id="clearSparqlFocusBtn" class="btn ghost small">Clear SPARQL Focus</button>
+              <button id="copyQueryBtn" class="btn ghost small">Copy</button>
+              <button id="runQueryBtn" class="btn ghost small">Run</button>
+            </div>
           </div>
         </section>
       </aside>

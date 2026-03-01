@@ -93,11 +93,14 @@ class Orchestrator:
         self.reasoning_trajectory_points_total = 0
         self.reasoning_deterministic_fallback_invocations = 0
         self.reasoning_deterministic_fallback_claims_total = 0
+        self.reasoning_consultant_fusion_invocations = 0
+        self.reasoning_consultant_claims_total = 0
         self.reasoning_debug_entries = 0
         self.events: list[dict[str, Any]] = []
         self.errors: list[dict[str, str]] = []
 
     def _track_motion_context(self, confirmed_tracks: list[Any]) -> list[dict[str, Any]]:
+        """Serialize tracker state into a compact motion context for reasoning."""
         motion: list[dict[str, Any]] = []
         for tr in confirmed_tracks[:20]:
             tr_uri = hash_uri(canon_track(self.source, tr.track_id)).uri()
@@ -139,6 +142,11 @@ class Orchestrator:
         return ix1 >= ox1 and iy1 >= oy1 and ix2 <= ox2 and iy2 <= oy2
 
     def _heuristic_relation_claims(self, regions: list[dict[str, Any]], max_claims: int = 8) -> list[dict[str, Any]]:
+        """Build deterministic geometric claims when model claims are unavailable.
+
+        The intent is to preserve useful graph growth in edge cases where the
+        reasoner returns zero claims.
+        """
         if len(regions) < 2:
             return []
         top = sorted(regions, key=lambda r: float(r["score"]), reverse=True)[:10]
@@ -226,6 +234,7 @@ class Orchestrator:
 
     @staticmethod
     def _ann_relation_claims(ann_neighbors: list[dict[str, Any]], max_claims: int = 4) -> list[dict[str, Any]]:
+        """Infer weak near-claims from ANN neighbors as a last-resort fallback."""
         rows = [row for row in ann_neighbors if isinstance(row, dict) and isinstance(row.get("uri"), str)]
         if len(rows) < 2:
             return []
@@ -260,7 +269,16 @@ class Orchestrator:
         return claims
 
     @staticmethod
+    def _claim_key(claim: dict[str, Any]) -> tuple[str, str, str]:
+        return (
+            str(claim.get("subject_uri", "")),
+            str(claim.get("predicate_iri", "")),
+            str(claim.get("object_uri", "")),
+        )
+
+    @staticmethod
     def _trajectory_payload(points: Any) -> list[dict[str, Any]]:
+        """Normalize trajectory points to validated [0,1000] coordinate payload."""
         if points is None:
             return []
         out: list[dict[str, Any]] = []
@@ -295,6 +313,7 @@ class Orchestrator:
         frame_hw: tuple[int, int],
         horizon_points: int = 5,
     ) -> list[dict[str, Any]]:
+        """Construct a short future trajectory from fastest visible track motion."""
         if not track_motion:
             return []
         frame_h, frame_w = int(frame_hw[0]), int(frame_hw[1])
@@ -392,6 +411,7 @@ class Orchestrator:
         should_stop: Optional[Callable[[], bool]] = None,
         wait_if_paused: Optional[Callable[[], None]] = None,
     ) -> dict[str, Any]:
+        """Run ingest -> perception -> tracking -> KG -> reasoning on one MP4."""
         started_ns = time.time_ns()
         t_start = time.perf_counter()
 
@@ -405,6 +425,13 @@ class Orchestrator:
         tracks_added: set[int] = set()
         last_query_vec: Optional[np.ndarray] = None
         stopped_early = False
+        detector_s = 0.0
+        tracking_s = 0.0
+        embedding_s = 0.0
+        reasoning_model_s = 0.0
+        reasoning_pipeline_s = 0.0
+        ann_search_s = 0.0
+        kg_write_s = 0.0
 
         for fr in iter_mp4(
             mp4_path,
@@ -426,23 +453,34 @@ class Orchestrator:
 
             c_frame = canon_frame(self.source, fr.index, fr.t_ns)
             frame_uri = hash_uri(c_frame).uri()
+            t_kg = time.perf_counter()
             self.kg.add_frame(frame_uri, self.source.source_id, fr.index, fr.t_ns)
+            kg_write_s += max(0.0, time.perf_counter() - t_kg)
 
+            t_det = time.perf_counter()
             dets = self.detector.detect(fr.bgr)
+            detector_s += max(0.0, time.perf_counter() - t_det)
+
+            t_track = time.perf_counter()
             _removed, confirmed = self.tracker.step(dets)
+            tracking_s += max(0.0, time.perf_counter() - t_track)
 
             for tr in confirmed:
                 if tr.track_id in tracks_added:
                     continue
                 c_tr = canon_track(self.source, tr.track_id)
                 tr_uri = hash_uri(c_tr).uri()
+                t_kg = time.perf_counter()
                 self.kg.add_track(tr_uri, self.source.source_id, tr.track_id, tr.cls)
+                kg_write_s += max(0.0, time.perf_counter() - t_kg)
                 tracks_added.add(tr.track_id)
 
             for det in dets:
                 c_reg = canon_region(frame_uri, det.bbox_xyxy, det.cls)
                 reg_uri = hash_uri(c_reg).uri()
+                t_kg = time.perf_counter()
                 self.kg.add_region(reg_uri, frame_uri, det.cls, det.score, det.bbox_xyxy, track_uri=None)
+                kg_write_s += max(0.0, time.perf_counter() - t_kg)
                 current_regions.append(
                     {
                         "uri": reg_uri,
@@ -452,6 +490,7 @@ class Orchestrator:
                     }
                 )
 
+                t_embed = time.perf_counter()
                 emb = self.embedder.embed_region(fr.bgr, det.bbox_xyxy)
                 last_query_vec = emb.vec
                 self.vstore.add(
@@ -471,6 +510,7 @@ class Orchestrator:
                         "frame_uri": frame_uri,
                     },
                 )
+                embedding_s += max(0.0, time.perf_counter() - t_embed)
                 regions_added += 1
 
             self._emit_progress(
@@ -508,13 +548,20 @@ class Orchestrator:
 
             reason_every = self.cfg.reasoning.reason_every_n_frames
             if reason_every > 0 and frames_seen % reason_every == 0:
+                t_reason_pipeline = time.perf_counter()
+
+                t_ann = time.perf_counter()
                 ann = self.vstore.search(query=last_query_vec, k=5) if last_query_vec is not None else []
+                ann_search_s += max(0.0, time.perf_counter() - t_ann)
+
+                t_ann = time.perf_counter()
                 sparql_tracks = self.kg.query(
                     """
                     PREFIX kg: <https://example.org/robosikg#>
                     SELECT ?t ?cls WHERE { ?t a kg:Track ; kg:cls ?cls } LIMIT 20
                     """
                 )
+                ann_search_s += max(0.0, time.perf_counter() - t_ann)
                 track_motion = self._track_motion_context(confirmed)
 
                 rin = ReasoningInput(
@@ -529,7 +576,9 @@ class Orchestrator:
                     ann_neighbors=ann,
                 )
 
+                t_reason = time.perf_counter()
                 rout, backend = self._reason(rin)
+                reasoning_model_s += max(0.0, time.perf_counter() - t_reason)
                 self.reasoning_invocations += 1
 
                 if self.cfg.reasoning.debug_capture and backend == "nim":
@@ -558,6 +607,7 @@ class Orchestrator:
                         "predicate_iri": c.predicate_iri,
                         "object_uri": c.object_uri,
                         "confidence": float(c.confidence),
+                        "claim_source": "nim",
                     }
                     for c in ordered_claims
                 ]
@@ -567,28 +617,82 @@ class Orchestrator:
                     if not fallback_claims:
                         fallback_claims = self._ann_relation_claims(ann, max_claims=4)
                     if fallback_claims:
-                        claims_out = fallback_claims
                         claim_source = "geometric_fallback" if "geometry_" in fallback_claims[0]["type"] else "retrieval_fallback"
+                        claims_out = [
+                            {
+                                **cl,
+                                "confidence": float(max(0.0, min(1.0, float(cl["confidence"])))),
+                                "claim_source": claim_source,
+                            }
+                            for cl in fallback_claims
+                        ]
                         self.reasoning_deterministic_fallback_invocations += 1
                         self.reasoning_deterministic_fallback_claims_total += len(fallback_claims)
+                else:
+                    # Consultant fusion: keep model claims as primary truth and only
+                    # add a few non-duplicate vision-derived claims with capped confidence.
+                    seen_claims = {self._claim_key(cl) for cl in claims_out}
+                    consultant_additions = 0
+                    consultant_limit = 3
+                    consultant_streams = [
+                        ("geometric_consultant", self._heuristic_relation_claims(current_regions, max_claims=6)),
+                        ("retrieval_consultant", self._ann_relation_claims(ann, max_claims=3)),
+                    ]
+                    for source_name, stream in consultant_streams:
+                        for cl in stream:
+                            if consultant_additions >= consultant_limit:
+                                break
+                            key = self._claim_key(cl)
+                            if not all(key):
+                                continue
+                            if key in seen_claims:
+                                continue
+                            seen_claims.add(key)
+                            claims_out.append(
+                                {
+                                    **cl,
+                                    "confidence": float(max(0.0, min(0.72, float(cl["confidence"])))),
+                                    "claim_source": source_name,
+                                }
+                            )
+                            consultant_additions += 1
+                        if consultant_additions >= consultant_limit:
+                            break
+                    if consultant_additions > 0:
+                        self.reasoning_consultant_fusion_invocations += 1
+                        self.reasoning_consultant_claims_total += consultant_additions
 
                 claim_count = len(claims_out)
                 self.reasoning_claims_total += claim_count
                 if claim_count == 0:
                     self.reasoning_zero_claim_invocations += 1
 
+                claim_breakdown: dict[str, int] = {}
                 for cl in claims_out:
+                    src = str(cl.get("claim_source", "unknown"))
+                    claim_breakdown[src] = claim_breakdown.get(src, 0) + 1
+                claim_sources = sorted(claim_breakdown)
+                if len(claim_sources) > 1:
+                    claim_source = "mixed"
+                elif len(claim_sources) == 1:
+                    claim_source = claim_sources[0]
+                else:
+                    claim_source = "none"
+
+                for cl in claims_out:
+                    t_kg = time.perf_counter()
                     edge_uri = self.kg.add_edge(
                         s_uri=cl["subject_uri"],
                         p_iri=cl["predicate_iri"],
                         o_uri=cl["object_uri"],
                         confidence=float(cl["confidence"]),
                     )
+                    kg_write_s += max(0.0, time.perf_counter() - t_kg)
                     self.events.append(
                         {
                             "type": "claim",
                             "backend": backend,
-                            "claim_source": claim_source,
+                            "claim_source": cl.get("claim_source", "unknown"),
                             "edge": edge_uri,
                             "summary": cl["type"],
                             "confidence": float(cl["confidence"]),
@@ -616,6 +720,8 @@ class Orchestrator:
                         "summary": rout.summary,
                         "no_claim_reason": rout.no_claim_reason,
                         "claim_source": claim_source,
+                        "claim_sources": claim_sources,
+                        "claim_breakdown": claim_breakdown,
                         "claims": claim_count,
                         "trajectory_points": trajectory_points,
                         "trajectory_source": trajectory_source,
@@ -635,6 +741,7 @@ class Orchestrator:
                         "trajectory_2d_norm_0_1000": trajectory_payload,
                     },
                 )
+                reasoning_pipeline_s += max(0.0, time.perf_counter() - t_reason_pipeline)
 
         if self.cfg.kg.persist_ttl:
             with open(self.art.ttl_path, "w", encoding="utf-8") as f:
@@ -644,6 +751,15 @@ class Orchestrator:
 
         finished_ns = time.time_ns()
         elapsed_s = max(0.0, time.perf_counter() - t_start)
+        io_s = max(
+            0.0,
+            elapsed_s
+            - detector_s
+            - tracking_s
+            - embedding_s
+            - reasoning_pipeline_s
+            - kg_write_s,
+        )
         summary = {
             "source_id": self.source.source_id,
             "input_mp4_path": mp4_path,
@@ -656,6 +772,16 @@ class Orchestrator:
                 "finished_ns": finished_ns,
                 "elapsed_s": elapsed_s,
                 "effective_fps": 0.0 if elapsed_s <= 0 else (frames_seen / elapsed_s),
+                "stages_s": {
+                    "detector_s": detector_s,
+                    "tracking_s": tracking_s,
+                    "embedding_s": embedding_s,
+                    "reasoning_s": reasoning_model_s,
+                    "reasoning_pipeline_s": reasoning_pipeline_s,
+                    "ann_search_s": ann_search_s,
+                    "kg_write_s": kg_write_s,
+                    "io_s": io_s,
+                },
             },
             "counts": {
                 "frames_seen": frames_seen,
@@ -674,6 +800,8 @@ class Orchestrator:
                 else (self.reasoning_claims_total / self.reasoning_invocations),
                 "reasoning_deterministic_fallback_invocations": self.reasoning_deterministic_fallback_invocations,
                 "reasoning_deterministic_fallback_claims_total": self.reasoning_deterministic_fallback_claims_total,
+                "reasoning_consultant_fusion_invocations": self.reasoning_consultant_fusion_invocations,
+                "reasoning_consultant_claims_total": self.reasoning_consultant_claims_total,
                 "trajectory_points_total": self.reasoning_trajectory_points_total,
                 "reasoning_debug_entries": self.reasoning_debug_entries,
                 "kg_triples": self.kg.triple_count(),
