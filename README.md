@@ -214,3 +214,8 @@ See `docs/run_summary_schema.md` for summary fields.
 ## Cookoff Submission Checklist
 
 See `docs/cookoff_checklist.md`.
+
+## License
+
+This project is licensed under the Apache License 2.0.
+See `LICENSE` for the full text.
