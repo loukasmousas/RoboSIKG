@@ -215,6 +215,11 @@ See `docs/run_summary_schema.md` for summary fields.
 
 See `docs/cookoff_checklist.md`.
 
+## Media Credits
+
+- `data/scratch/balloons.mp4`: Video by Seda Korkmaz from Pexels: https://www.pexels.com/video/classic-car-journey-with-hot-air-balloons-35670975/
+- `data/scratch/traffic.mp4`: Video by fewmiracles . from Pexels: https://www.pexels.com/video/golden-hour-traffic-in-urban-cityscape-29766058/
+
 ## License
 
 This project is licensed under the Apache License 2.0.
