@@ -121,6 +121,10 @@ python3 scripts/run_web_console.py
 Open:
 - `http://127.0.0.1:8080`
 
+### UI Screenshot
+
+![RoboSIKG Ops Console UI](RoboSIKG_UI.png)
+
 ## NIM (Optional)
 
 Run local Cosmos Reason 2 NIM:
