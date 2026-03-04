@@ -32,6 +32,7 @@ robosikg/web/
   static/
 compose.yaml
 docs/
+  architecture.md
   run_summary_schema.md
   web_console_controls.md
   sparql_query_playbook.md
@@ -198,6 +199,10 @@ SPARQL examples for presentation and analysis:
   - `reasoning_debug.jsonl` (only when `--reasoning-debug` is enabled)
 
 See `docs/run_summary_schema.md` for summary fields.
+
+## Architecture
+
+See `docs/architecture.md` for the full NVIDIA-focused system diagram (Mermaid).
 
 ## CUDA Runtime Notes
 
